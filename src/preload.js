@@ -24,6 +24,12 @@ contextBridge.exposeInMainWorld('api', {
   renameMemo: (id, title) => ipcRenderer.invoke('list:rename', id, title),
   onRename: (cb) => ipcRenderer.on('list:rename', (_e, id) => cb(id)),
 
+  // 설정
+  openSettings: () => ipcRenderer.invoke('settings:open'),
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
+  testNotify: () => ipcRenderer.invoke('settings:test'),
+
   // 알림 팝업
   openFromNotify: (memoId) => ipcRenderer.invoke('notify:open', memoId),
   snooze: (memoId) => ipcRenderer.invoke('notify:snooze', memoId),

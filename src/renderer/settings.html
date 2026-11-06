@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>딩동메모 - 설정</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <main>
+    <h1>설정</h1>
+
+    <section>
+      <h2>알림 위치</h2>
+      <p class="hint">화면에서 알림이 뜰 자리를 눌러 고르세요.</p>
+      <div class="monitor" id="monitor" role="radiogroup" aria-label="알림 위치">
+        <button class="slot" data-pos="top-left" role="radio" aria-label="좌측 상단"></button>
+        <button class="slot" data-pos="top-center" role="radio" aria-label="위 가운데"></button>
+        <button class="slot" data-pos="top-right" role="radio" aria-label="우측 상단"></button>
+        <button class="slot" data-pos="bottom-left" role="radio" aria-label="좌측 하단"></button>
+        <button class="slot" data-pos="bottom-center" role="radio" aria-label="아래 가운데"></button>
+        <button class="slot" data-pos="bottom-right" role="radio" aria-label="우측 하단"></button>
+        <div class="taskbar"></div>
+      </div>
+      <p class="pos-label" id="pos-label"></p>
+
+      <div class="displays" id="displays" hidden>
+        <span class="field-label">모니터가 여러 개일 때</span>
+        <div class="seg">
+          <button data-display="primary">주 모니터</button>
+          <button data-display="cursor">마우스가 있는 모니터</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>알림 닫힘 방식</h2>
+      <div class="choices" role="radiogroup" aria-label="알림 닫힘 방식">
+        <button class="choice" data-mode="auto" role="radio">
+          <span class="dot"></span>
+          <span><b>시간이 지나면 자동으로 닫힘</b><small>정한 시간이 지나면 사라져요. 마우스를 올리면 잠시 멈춰요.</small></span>
+        </button>
+        <button class="choice" data-mode="manual" role="radio">
+          <span class="dot"></span>
+          <span><b>확인을 눌러야 닫힘</b><small>확인을 누를 때까지 화면에 남아 있어요.</small></span>
+        </button>
+      </div>
+
+      <div class="duration" id="duration">
+        <div class="duration-head">
+          <span class="field-label">표시 시간</span>
+          <span class="value" id="sec-value"></span>
+        </div>
+        <input type="range" id="seconds" min="3" max="10" step="1" aria-label="표시 시간(초)">
+        <div class="ticks"><span>3초</span><span>10초</span></div>
+      </div>
+
+      <button class="preview" id="btn-test">
+        <svg viewBox="0 0 16 16"><path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1 1H3zM6.5 13.5a1.5 1.5 0 0 0 3 0"/></svg>
+        알림 미리보기
+      </button>
+    </section>
+
+    <section>
+      <h2>일반</h2>
+      <label class="toggle">
+        <input type="checkbox" id="login">
+        <span>윈도우 시작 시 자동 실행</span>
+      </label>
+    </section>
+
+    <p class="saved" id="saved" aria-live="polite"></p>
+  </main>
+  <script src="settings.js"></script>
+</body>
+</html>

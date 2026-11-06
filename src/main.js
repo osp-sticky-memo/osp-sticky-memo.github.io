@@ -12,12 +12,12 @@ const DEFAULT_SIZE = { width: 260, height: 260 };
 const NOTIFY_SIZE = { width: 340, height: 104 };
 const NOTIFY_GAP = 8;
 const NOTIFY_MARGIN = 12;
-const NOTIFY_DURATION_MS = 8000;
 const SNOOZE_MIN = 5;
 
 const memoWindows = new Map(); // memoId -> BrowserWindow
 let notifyWindows = [];        // 아래에서 위로 쌓이는 순서
 let listWindow = null;         // 메모 목록 창 (하나만)
+let settingsWindow = null;     // 설정 창 (하나만)
 let tray = null;
 let schedulerTimer = null;
 let isQuitting = false;
@@ -347,7 +347,8 @@ function refreshTrayMenu() {
       checked: loginEnabled,
       click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }),
     },
-    { label: '알림 테스트', click: () => showNotification({ id: null, content: '알림이 이렇게 표시돼요.\n클릭하면 메모가 열려요.', color: 'yellow' }, { test: true }) },
+    { label: '알림 미리보기', click: testNotification },
+    { label: '설정…', click: openSettingsWindow },
     { type: 'separator' },
     { label: '종료', click: () => { isQuitting = true; app.quit(); } },
   ]);
@@ -412,6 +413,7 @@ function advanceAlarm(alarm, now) {
 
 // ---------- 카톡식 알림 팝업 ----------
 function showNotification(memo, opts = {}) {
+  const settings = store.getSettings();
   const win = new BrowserWindow({
     width: NOTIFY_SIZE.width,
     height: NOTIFY_SIZE.height,
@@ -442,7 +444,9 @@ function showNotification(memo, opts = {}) {
     late: !!opts.late,
     test: !!opts.test,
     dueAt: opts.dueAt || Date.now(),
-    duration: NOTIFY_DURATION_MS,
+    mode: settings.notifyMode,
+    duration: settings.notifySeconds * 1000,
+    position: settings.notifyPosition,
     snoozeMin: SNOOZE_MIN,
   };
   win.loadFile(path.join(__dirname, 'renderer', 'notify.html'), {
@@ -459,15 +463,68 @@ function showNotification(memo, opts = {}) {
   });
 }
 
-// 우측 하단부터 위로 쌓기 (작업표시줄 위치는 workArea가 알아서 반영)
+// 설정한 위치에 알림 쌓기 (작업표시줄 위치는 workArea가 알아서 반영)
+// 아래쪽이면 위로, 위쪽이면 아래로 쌓임
 function layoutNotifications() {
-  const wa = screen.getPrimaryDisplay().workArea;
+  const { notifyPosition, notifyDisplay } = store.getSettings();
+  const display = notifyDisplay === 'cursor'
+    ? screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+    : screen.getPrimaryDisplay();
+  const wa = display.workArea;
+  const [v, h] = notifyPosition.split('-'); // top|bottom, left|right|center
+  const W = NOTIFY_SIZE.width, H = NOTIFY_SIZE.height;
+
+  let x = wa.x + wa.width - W - NOTIFY_MARGIN;
+  if (h === 'left') x = wa.x + NOTIFY_MARGIN;
+  if (h === 'center') x = wa.x + Math.round((wa.width - W) / 2);
+
   notifyWindows.forEach((w, i) => {
     if (w.isDestroyed()) return;
-    const x = wa.x + wa.width - NOTIFY_SIZE.width - NOTIFY_MARGIN;
-    const y = wa.y + wa.height - NOTIFY_MARGIN - (NOTIFY_SIZE.height + NOTIFY_GAP) * (i + 1) + NOTIFY_GAP;
-    w.setBounds({ x, y, width: NOTIFY_SIZE.width, height: NOTIFY_SIZE.height });
+    const step = (H + NOTIFY_GAP) * i;
+    const y = v === 'top'
+      ? wa.y + NOTIFY_MARGIN + step
+      : wa.y + wa.height - NOTIFY_MARGIN - H - step;
+    w.setBounds({ x, y, width: W, height: H });
   });
+}
+
+// ---------- 설정 창 ----------
+function openSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    return;
+  }
+  const wa = screen.getPrimaryDisplay().workArea;
+  settingsWindow = new BrowserWindow({
+    width: 420,
+    height: Math.min(900, wa.height - 40),
+    minWidth: 380,
+    minHeight: 480,
+    title: '딩동메모 - 설정',
+    autoHideMenuBar: true,
+    backgroundColor: '#fbf8f3',
+    show: false,
+    icon: path.join(ASSETS, 'icon.png'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  settingsWindow.setMenu(null);
+  settingsWindow.loadFile(path.join(__dirname, 'renderer', 'settings.html'));
+  settingsWindow.once('ready-to-show', () => settingsWindow.show());
+  settingsWindow.on('closed', () => { settingsWindow = null; });
+}
+
+function testNotification() {
+  showNotification({
+    id: null,
+    title: '알림 미리보기',
+    content: '지금 설정한 위치와 방식으로 알림이 이렇게 떠요.',
+    color: 'yellow',
+  }, { test: true });
 }
 
 // ---------- IPC ----------
@@ -493,6 +550,19 @@ ipcMain.handle('list:rename', (_e, id, title) => {
   pushToMemo(id);
 });
 ipcMain.handle('memo:open-list', () => { openListWindow(); });
+
+ipcMain.handle('settings:open', () => openSettingsWindow());
+ipcMain.handle('settings:get', () => ({ ...store.getSettings(), openAtLogin: app.getLoginItemSettings().openAtLogin, displayCount: screen.getAllDisplays().length }));
+ipcMain.handle('settings:set', (_e, patch) => {
+  if (typeof patch.openAtLogin === 'boolean') {
+    app.setLoginItemSettings({ openAtLogin: patch.openAtLogin });
+    refreshTrayMenu();
+  }
+  const s = store.updateSettings(patch);
+  layoutNotifications(); // 떠 있는 알림도 새 위치로
+  return s;
+});
+ipcMain.handle('settings:test', () => testNotification());
 
 ipcMain.handle('memo:set-alarm', (_e, id, alarm) => {
   // alarm: { at: number(ms), repeat: 'none'|'daily'|'weekdays' } | null

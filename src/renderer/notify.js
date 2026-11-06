@@ -5,6 +5,12 @@ const card = $('#card');
 const progress = $('#progress');
 
 document.body.dataset.color = data.color || 'yellow';
+document.body.dataset.pos = data.position || 'bottom-right';
+const manual = data.mode === 'manual';
+document.body.classList.toggle('manual', manual);
+// 확인 모드: X 대신 확인 버튼 (확인을 눌러야 닫힘)
+$('#btn-x').hidden = manual;
+$('#btn-ok').hidden = !manual;
 
 const text = (data.content || '').trim();
 const contentEl = $('#content');
@@ -41,17 +47,18 @@ function leave(fn) {
 
 $('#open-area').onclick = () => leave(() => window.api.openFromNotify(data.memoId));
 $('#btn-x').onclick = () => leave(() => window.api.closeNotify());
+$('#btn-ok').onclick = () => leave(() => window.api.closeNotify());
 snoozeBtn.onclick = () => leave(() => window.api.snooze(data.memoId));
 
 // ---------- 자동 닫힘 (마우스 올리면 멈춤) ----------
-// 놓친 알림은 자동으로 사라지지 않게 해서 확인하도록
+// 확인 모드이거나 놓친 알림이면 자동으로 사라지지 않음
 let remaining = data.duration;
 let last = performance.now();
 let hovering = false;
 card.addEventListener('mouseenter', () => { hovering = true; });
 card.addEventListener('mouseleave', () => { hovering = false; last = performance.now(); });
 
-if (data.late) {
+if (data.late || manual) {
   progress.hidden = true;
 } else {
   requestAnimationFrame(function tick(now) {

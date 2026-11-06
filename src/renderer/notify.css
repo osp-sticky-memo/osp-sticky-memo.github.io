@@ -8,11 +8,16 @@ html, body { background: transparent; overflow: hidden; user-select: none; }
   border: 1px solid rgba(0, 0, 0, .14);
   border-radius: 10px;
   overflow: hidden;
+  --from: translateX(110%);
   animation: slide-in .28s cubic-bezier(.2, .9, .3, 1.1);
 }
+/* 위치에 따라 들어오는 방향 */
+[data-pos$="-left"] .card { --from: translateX(-110%); }
+[data-pos="top-center"] .card { --from: translateY(-110%); }
+[data-pos="bottom-center"] .card { --from: translateY(110%); }
 .card.leaving { animation: slide-out .22s ease-in forwards; }
-@keyframes slide-in { from { transform: translateX(110%); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes slide-out { to { transform: translateX(110%); opacity: 0; } }
+@keyframes slide-in { from { transform: var(--from); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes slide-out { to { transform: var(--from); opacity: 0; } }
 
 .stripe { width: 6px; flex: none; background: var(--bar); border-right: 1px solid rgba(0, 0, 0, .06); }
 
@@ -59,7 +64,17 @@ html, body { background: transparent; overflow: hidden; user-select: none; }
   font-size: 12px; white-space: nowrap;
 }
 .snooze:hover { background: #f0f0f0; }
-.snooze[hidden] { display: none; }
+.snooze[hidden], .ok[hidden], .x[hidden] { display: none; }
+.ok {
+  padding: 4px 12px;
+  border: 0; border-radius: 6px;
+  background: #ff6a3d; color: #fff;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.ok:hover { filter: brightness(1.08); }
+/* 확인 모드: 버튼 두 개를 위아래로 */
+.manual .side { justify-content: center; gap: 6px; padding: 10px 10px 10px 0; }
+.manual .snooze, .manual .ok { width: 64px; }
 
 .progress {
   position: absolute; left: 0; bottom: 0; height: 2px;

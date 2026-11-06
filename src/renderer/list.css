@@ -24,6 +24,14 @@ header {
 .head-row { display: flex; align-items: center; gap: 8px; }
 h1 { flex: 1; margin: 0; font-size: 18px; letter-spacing: -.02em; }
 .count { color: var(--muted); font-weight: 500; font-size: 14px; margin-left: 2px; }
+.gear {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface); color: var(--muted);
+}
+.gear:hover { color: var(--text); border-color: #d9d1c4; }
+.gear svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
 .new {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 7px 12px 7px 9px;
