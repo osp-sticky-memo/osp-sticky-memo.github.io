@@ -30,6 +30,12 @@ contextBridge.exposeInMainWorld('api', {
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
   testNotify: () => ipcRenderer.invoke('settings:test'),
 
+  // 업데이트
+  getUpdateState: () => ipcRenderer.invoke('update:state'),
+  checkUpdate: () => ipcRenderer.invoke('update:check'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),
+
   // 알림 팝업
   openFromNotify: (memoId) => ipcRenderer.invoke('notify:open', memoId),
   snooze: (memoId) => ipcRenderer.invoke('notify:snooze', memoId),

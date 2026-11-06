@@ -6,6 +6,7 @@ const {
 } = require('electron');
 const path = require('path');
 const store = require('./store');
+const updater = require('./updater');
 
 const ASSETS = path.join(__dirname, '..', 'assets');
 const DEFAULT_SIZE = { width: 260, height: 260 };
@@ -48,6 +49,17 @@ app.whenReady().then(() => {
   startScheduler();
   powerMonitor.on('resume', checkAlarms);   // 절전 해제 시 놓친 알림 처리
   powerMonitor.on('unlock-screen', checkAlarms);
+
+  let lastUpdateStatus = null;
+  updater.init({
+    isEnabled: () => store.getSettings().autoUpdate,
+    onStatus: (s) => {
+      if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('update:status', s);
+      if (s.status !== lastUpdateStatus) { lastUpdateStatus = s.status; refreshTrayMenu(); }
+    },
+    onDownloaded: (version) => showNotification({ id: null, color: 'yellow' }, { update: version }),
+    beforeInstall: () => { isQuitting = true; store.flush(); },
+  });
 });
 
 // 창을 다 닫아도 종료하지 않고 트레이에 상주 (리스너만 등록해두면 자동 종료 안 됨)
@@ -337,7 +349,12 @@ function createTray() {
 function refreshTrayMenu() {
   if (!tray) return;
   const loginEnabled = app.getLoginItemSettings().openAtLogin;
+  const up = updater.getState();
   const menu = Menu.buildFromTemplate([
+    ...(up.status === 'ready' ? [
+      { label: `재시작해서 업데이트 (${up.version})`, click: () => updater.installNow() },
+      { type: 'separator' },
+    ] : []),
     { label: '새 메모', click: () => createMemo() },
     { label: '메모 목록 열기', click: () => openListWindow() },
     { type: 'separator' },
@@ -349,6 +366,7 @@ function refreshTrayMenu() {
     },
     { label: '알림 미리보기', click: testNotification },
     { label: '설정…', click: openSettingsWindow },
+    ...(up.packaged && up.status !== 'ready' ? [{ label: '업데이트 확인', click: () => { openSettingsWindow(); updater.check(); } }] : []),
     { type: 'separator' },
     { label: '종료', click: () => { isQuitting = true; app.quit(); } },
   ]);
@@ -444,7 +462,8 @@ function showNotification(memo, opts = {}) {
     late: !!opts.late,
     test: !!opts.test,
     dueAt: opts.dueAt || Date.now(),
-    mode: settings.notifyMode,
+    update: opts.update || null,
+    mode: opts.update ? 'manual' : settings.notifyMode,
     duration: settings.notifySeconds * 1000,
     position: settings.notifyPosition,
     snoozeMin: SNOOZE_MIN,
@@ -554,6 +573,7 @@ ipcMain.handle('memo:open-list', () => { openListWindow(); });
 ipcMain.handle('settings:open', () => openSettingsWindow());
 ipcMain.handle('settings:get', () => ({ ...store.getSettings(), openAtLogin: app.getLoginItemSettings().openAtLogin, displayCount: screen.getAllDisplays().length }));
 ipcMain.handle('settings:set', (_e, patch) => {
+  if (typeof patch.autoUpdate === 'boolean') setImmediate(() => updater.reschedule());
   if (typeof patch.openAtLogin === 'boolean') {
     app.setLoginItemSettings({ openAtLogin: patch.openAtLogin });
     refreshTrayMenu();
@@ -563,6 +583,14 @@ ipcMain.handle('settings:set', (_e, patch) => {
   return s;
 });
 ipcMain.handle('settings:test', () => testNotification());
+
+ipcMain.handle('update:state', () => updater.getState());
+ipcMain.handle('update:check', () => updater.check());
+ipcMain.handle('update:install', (e) => {
+  const ok = updater.installNow();
+  if (!ok) BrowserWindow.fromWebContents(e.sender)?.close?.();
+  return ok;
+});
 
 ipcMain.handle('memo:set-alarm', (_e, id, alarm) => {
   // alarm: { at: number(ms), repeat: 'none'|'daily'|'weekdays' } | null

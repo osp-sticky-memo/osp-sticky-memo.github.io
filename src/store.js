@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS = {
   notifyDisplay: 'primary',   // primary | cursor (마우스가 있는 모니터)
   notifyMode: 'auto',         // auto: 시간이 지나면 닫힘 | manual: 확인을 눌러야 닫힘
   notifySeconds: 8,           // auto일 때 표시 시간 (3~10초)
+  autoUpdate: true,           // 새 버전 자동 확인·다운로드
 };
 let saveTimer = null;
 const listeners = [];
@@ -76,6 +77,7 @@ function updateSettings(patch) {
   if (NOTIFY_POSITIONS.includes(patch.notifyPosition)) next.notifyPosition = patch.notifyPosition;
   if (['primary', 'cursor'].includes(patch.notifyDisplay)) next.notifyDisplay = patch.notifyDisplay;
   if (['auto', 'manual'].includes(patch.notifyMode)) next.notifyMode = patch.notifyMode;
+  if (typeof patch.autoUpdate === 'boolean') next.autoUpdate = patch.autoUpdate;
   if (patch.notifySeconds != null) {
     const n = Math.round(Number(patch.notifySeconds));
     if (Number.isFinite(n)) next.notifySeconds = Math.min(10, Math.max(3, n));

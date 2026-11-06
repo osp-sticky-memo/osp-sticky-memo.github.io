@@ -38,7 +38,48 @@ function render() {
   $('#sec-value').textContent = manual ? '확인할 때까지' : `${settings.notifySeconds}초`;
 
   $('#login').checked = !!settings.openAtLogin;
+  $('#auto-update').checked = settings.autoUpdate !== false;
 }
+
+// ---------- 업데이트 ----------
+function renderUpdate(u) {
+  $('#ver').textContent = u.current;
+  const st = $('#up-status');
+  const btn = $('#btn-update');
+  st.className = 'up-status';
+  btn.className = 'small-btn';
+  btn.disabled = false;
+  btn.textContent = '업데이트 확인';
+  $('#up-bar').hidden = true;
+  switch (u.status) {
+    case 'dev': st.textContent = '개발 모드에서는 업데이트를 확인하지 않아요.'; btn.disabled = true; break;
+    case 'checking': st.textContent = '새 버전을 확인하는 중…'; btn.disabled = true; break;
+    case 'latest': st.textContent = '최신 버전이에요.'; st.classList.add('ok'); break;
+    case 'downloading':
+      st.textContent = `새 버전 ${u.version || ''} 받는 중… ${u.percent || 0}%`;
+      $('#up-bar').hidden = false;
+      $('#up-fill').style.width = `${u.percent || 0}%`;
+      btn.disabled = true;
+      break;
+    case 'ready':
+      st.textContent = `새 버전 ${u.version} 준비 완료`;
+      st.classList.add('ready');
+      btn.textContent = '재시작해서 업데이트';
+      btn.classList.add('primary');
+      break;
+    case 'error': st.textContent = u.message; st.classList.add('err'); break;
+    default: st.textContent = '';
+  }
+  btn.dataset.status = u.status;
+}
+
+$('#btn-update').onclick = async () => {
+  if ($('#btn-update').dataset.status === 'ready') window.api.installUpdate();
+  else renderUpdate(await window.api.checkUpdate());
+};
+window.api.onUpdateStatus(renderUpdate);
+window.api.getUpdateState().then(renderUpdate);
+$('#auto-update').addEventListener('change', (e) => save({ autoUpdate: e.target.checked }));
 
 async function save(patch) {
   const next = await window.api.setSettings(patch);

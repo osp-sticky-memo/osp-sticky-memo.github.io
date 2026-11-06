@@ -29,6 +29,16 @@ npm run dist
 3. GitHub Actions(`Release`)가 Windows에서 설치 파일을 빌드해 [Releases](https://github.com/osp-sticky-memo/osp-sticky-memo.github.io/releases)에 올려요.
 4. [다운로드 페이지](https://osp-sticky-memo.github.io/)(이 저장소의 `index.html`)의 다운로드 주소·버전·업데이트 내역을 새 버전으로 바꿔요.
 
+## 자동 업데이트
+
+0.1.6부터 설치된 앱이 스스로 업데이트해요 (`src/updater.js`, `electron-updater`).
+
+- 시작 15초 뒤, 그리고 4시간마다 최신 릴리스의 `latest.yml`을 확인해요.
+- 새 버전이 있으면 내려받아 두고 "새 버전 준비 완료 · 지금 재시작 / 나중에" 알림을 띄워요. 나중에를 누르면 프로그램을 끌 때 설치돼요.
+- 설정 창에서 자동으로 받기를 끄거나, 직접 확인할 수 있어요. 트레이 메뉴에도 `업데이트 확인`과 `재시작해서 업데이트`가 있어요.
+- 릴리스에는 설치 파일과 함께 `latest.yml`, `.exe.blockmap`이 꼭 올라가야 해요. `Release` 워크플로가 같이 올려요.
+- 개발 중(`npm start`)에는 업데이트를 확인하지 않아요.
+
 ## 다운로드 페이지
 
 `index.html`과 `web/` 폴더가 GitHub Pages(https://osp-sticky-memo.github.io/)로 배포되는 소개·다운로드 페이지예요. 디자인은 ohsangplay.com과 같은 스타일(`web/style.css`)을 쓰고, ohsangplay.com 홈에는 이 페이지로 가는 카드만 있어요.

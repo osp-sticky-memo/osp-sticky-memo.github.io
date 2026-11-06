@@ -48,6 +48,27 @@ function leave(fn) {
 $('#open-area').onclick = () => leave(() => window.api.openFromNotify(data.memoId));
 $('#btn-x').onclick = () => leave(() => window.api.closeNotify());
 $('#btn-ok').onclick = () => leave(() => window.api.closeNotify());
+
+// 업데이트 준비 알림: [지금 재시작] [나중에]
+if (data.update) {
+  document.body.classList.add('update');
+  contentEl.textContent = '';
+  const b = document.createElement('strong');
+  b.className = 'ntitle';
+  b.textContent = `새 버전 ${data.update} 준비 완료`;
+  contentEl.append(b, '\n지금 재시작하면 바로 적용돼요. 나중에 하면 프로그램을 끌 때 설치돼요.');
+  contentEl.classList.remove('empty');
+  timeEl.textContent = '업데이트';
+  timeEl.classList.remove('late');
+  $('#open-area').onclick = null;
+  $('#open-area').style.cursor = 'default';
+  const ok = $('#btn-ok');
+  ok.textContent = '지금 재시작';
+  ok.onclick = () => window.api.installUpdate();
+  snoozeBtn.hidden = false;
+  snoozeBtn.textContent = '나중에';
+  snoozeBtn.onclick = () => leave(() => window.api.closeNotify());
+}
 snoozeBtn.onclick = () => leave(() => window.api.snooze(data.memoId));
 
 // ---------- 자동 닫힘 (마우스 올리면 멈춤) ----------

@@ -75,6 +75,9 @@ html, body { background: transparent; overflow: hidden; user-select: none; }
 /* 확인 모드: 버튼 두 개를 위아래로 */
 .manual .side { justify-content: center; gap: 6px; padding: 10px 10px 10px 0; }
 .manual .snooze, .manual .ok { width: 64px; }
+.update .snooze, .update .ok { width: 78px; }
+.update .content { -webkit-line-clamp: 3; font-size: 13px; }
+.update .ntitle { font-size: 14px; }
 
 .progress {
   position: absolute; left: 0; bottom: 0; height: 2px;

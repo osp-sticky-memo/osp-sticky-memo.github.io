@@ -104,6 +104,26 @@ input[type="range"] { width: 100%; margin: 10px 0 2px; accent-color: var(--brand
 .preview:hover { background: var(--brand-soft); }
 .preview svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 
+.update-row { display: flex; align-items: center; gap: 12px; justify-content: space-between; margin-top: 8px; }
+.update-row > div { min-width: 0; flex: 1; }
+.ver { font-size: 14px; }
+.up-status { margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+.up-status.ok { color: #2f7d32; }
+.up-status.err { color: #c62828; }
+.up-status.ready { color: var(--brand); font-weight: 700; }
+.bar { margin-top: 6px; height: 4px; border-radius: 2px; background: #eee7dc; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; background: var(--brand); transition: width .3s; }
+.small-btn {
+  flex: none;
+  padding: 7px 12px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface); color: var(--text);
+  font-size: 13px; font-weight: 600;
+}
+.small-btn:hover:not(:disabled) { border-color: #d9d1c4; }
+.small-btn:disabled { opacity: .5; cursor: default; }
+.small-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+
 .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; margin-top: 8px; }
 .toggle input { width: 16px; height: 16px; accent-color: var(--brand); }
 
