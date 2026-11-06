@@ -1,8 +1,8 @@
 {
-  "name": "sticky-memo",
-  "productName": "스티커 메모",
-  "version": "0.1.0",
-  "description": "시간 알림이 되는 스티커 메모",
+  "name": "dingdong-memo",
+  "productName": "딩동메모",
+  "version": "0.1.1",
+  "description": "시간을 정해두면 딩동 알림이 오는 스티커형 메모",
   "author": "오상플레이",
   "main": "src/main.js",
   "scripts": {
@@ -14,8 +14,8 @@
     "electron-builder": "^26.0.0"
   },
   "build": {
-    "appId": "com.ohsang.util.stickymemo",
-    "productName": "스티커 메모",
+    "appId": "com.ohsang.util.dingdongmemo",
+    "productName": "딩동메모",
     "copyright": "© 2026 오상플레이",
     "directories": {
       "output": "dist"
@@ -41,18 +41,18 @@
         }
       ],
       "icon": "assets/icon.ico",
-      "artifactName": "StickyMemo-Setup-${version}.${ext}"
+      "artifactName": "DingDongMemo-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "스티커 메모"
+      "shortcutName": "딩동메모"
     }
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/osp-sticky-memo/osp-sticky-memo.github.io.git"
   },
-  "homepage": "https://ohsangplay.com/sticky-memo.html"
+  "homepage": "https://ohsangplay.com/dingdong-memo.html"
 }

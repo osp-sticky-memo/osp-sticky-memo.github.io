@@ -1,6 +1,8 @@
-# 스티커 메모
+# 딩동메모
 
-시간을 정해두면 카카오톡처럼 화면 우측 하단에 알림이 뜨는 윈도우용 스티커 메모.
+시간을 정해두면 카카오톡처럼 화면 우측 하단에 "딩동" 알림이 뜨는 윈도우용 스티커형 메모 프로그램.
+
+> 0.1.0까지는 이름이 "스티커 메모"였어요. Windows 기본 앱 Sticky Notes의 한국어 이름과 겹쳐서 0.1.1부터 딩동메모로 바꿨어요.
 
 ## 실행
 
@@ -15,7 +17,7 @@ npm start
 npm run dist
 ```
 
-`dist/` 폴더에 `StickyMemo-Setup-<버전>.exe`가 생겨요.
+`dist/` 폴더에 `DingDongMemo-Setup-<버전>.exe`가 생겨요.
 
 ## 배포 (새 버전 올리기)
 
@@ -25,7 +27,7 @@ npm run dist
    git tag v0.1.1 && git push origin v0.1.1
    ```
 3. GitHub Actions(`Release`)가 Windows에서 설치 파일을 빌드해 [Releases](https://github.com/osp-sticky-memo/osp-sticky-memo.github.io/releases)에 올려요.
-4. [ohsangplay.com 다운로드 페이지](https://ohsangplay.com/sticky-memo.html)(`ohsangplay/ohsangplay.github.io`의 `sticky-memo.html`)의 다운로드 주소·버전·업데이트 내역을 새 버전으로 바꿔요.
+4. [ohsangplay.com 다운로드 페이지](https://ohsangplay.com/dingdong-memo.html)(`ohsangplay/ohsangplay.github.io`의 `dingdong-memo.html`)의 다운로드 주소·버전·업데이트 내역을 새 버전으로 바꿔요.
 
 이 저장소의 `index.html`은 GitHub Pages 주소로 들어오면 ohsangplay.com 다운로드 페이지로 보내는 용도예요.
 
@@ -55,7 +57,7 @@ src/
 assets/              앱·트레이 아이콘
 ```
 
-데이터 위치: `%APPDATA%\스티커 메모\memos.json`
+데이터 위치: `%APPDATA%\딩동메모\memos.json` (예전 `스티커 메모` 폴더의 메모는 처음 실행 때 자동으로 옮겨와요)
 
 ## 조절할 만한 값 (src/main.js 상단)
 

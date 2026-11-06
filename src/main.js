@@ -1,4 +1,4 @@
-// 스티커 메모 - 메인 프로세스
+// 딩동메모 - 메인 프로세스
 // 역할: 메모 저장, 메모 창 관리, 트레이, 알림 스케줄러, 카톡식 알림 팝업
 
 const {
@@ -29,7 +29,7 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 // 윈도우 알림 그룹/작업표시줄 식별용
-app.setAppUserModelId('com.ohsang.util.stickymemo');
+app.setAppUserModelId('com.ohsang.util.dingdongmemo');
 
 app.whenReady().then(() => {
   store.load(app.getPath('userData'));
@@ -174,7 +174,7 @@ function fitToScreen(b) {
 function createTray() {
   const img = nativeImage.createFromPath(path.join(ASSETS, 'tray.png'));
   tray = new Tray(img);
-  tray.setToolTip('스티커 메모');
+  tray.setToolTip('딩동메모');
   tray.on('click', showAllMemos);
   tray.on('double-click', () => createMemo());
   refreshTrayMenu();

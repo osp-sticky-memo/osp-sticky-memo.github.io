@@ -1,4 +1,4 @@
-// 메모 저장소 - %APPDATA%/스티커 메모/memos.json 에 저장
+// 메모 저장소 - %APPDATA%/딩동메모/memos.json 에 저장
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -9,9 +9,13 @@ let saveTimer = null;
 
 const COLORS = ['yellow', 'green', 'pink', 'purple', 'blue', 'gray'];
 
+// 0.1.0까지 쓰던 앱 이름의 데이터 폴더
+const LEGACY_DIR_NAMES = ['스티커 메모'];
+
 function load(dir) {
   fs.mkdirSync(dir, { recursive: true });
   filePath = path.join(dir, 'memos.json');
+  migrateLegacy(dir);
   try {
     const raw = fs.readFileSync(filePath, 'utf8');
     const parsed = JSON.parse(raw);
@@ -21,6 +25,20 @@ function load(dir) {
       // 파일이 깨졌으면 백업해두고 새로 시작
       try { fs.copyFileSync(filePath, filePath + '.broken-' + Date.now()); } catch {}
     }
+  }
+}
+
+// 새 폴더에 메모가 아직 없고 예전 이름 폴더에 있으면 복사해 옴 (원본은 남겨 둠)
+function migrateLegacy(dir) {
+  if (fs.existsSync(filePath)) return;
+  for (const name of LEGACY_DIR_NAMES) {
+    const old = path.join(path.dirname(dir), name, 'memos.json');
+    try {
+      if (fs.existsSync(old)) {
+        fs.copyFileSync(old, filePath);
+        return;
+      }
+    } catch {}
   }
 }
 
