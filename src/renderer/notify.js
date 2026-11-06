@@ -7,8 +7,18 @@ const progress = $('#progress');
 document.body.dataset.color = data.color || 'yellow';
 
 const text = (data.content || '').trim();
-$('#content').textContent = text || '(빈 메모)';
-$('#content').classList.toggle('empty', !text);
+const contentEl = $('#content');
+if (data.title) {
+  // 제목은 굵게 한 줄, 본문은 그 아래 한 줄
+  const b = document.createElement('strong');
+  b.className = 'ntitle';
+  b.textContent = data.title;
+  contentEl.append(b);
+  if (text) contentEl.append('\n' + text);
+} else {
+  contentEl.textContent = text || '(빈 메모)';
+  contentEl.classList.toggle('empty', !text);
+}
 
 const d = new Date(data.dueAt);
 const hm = `${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${String(d.getMinutes()).padStart(2, '0')}`;

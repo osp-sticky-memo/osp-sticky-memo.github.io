@@ -12,6 +12,9 @@
     <button class="icon" id="btn-new" title="새 메모">
       <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>
     </button>
+    <button class="icon" id="btn-list" title="메모 목록">
+      <svg viewBox="0 0 16 16"><path d="M5.5 4.5h7M5.5 8h7M5.5 11.5h7"/><circle cx="3" cy="4.5" r=".6" class="fill"/><circle cx="3" cy="8" r=".6" class="fill"/><circle cx="3" cy="11.5" r=".6" class="fill"/></svg>
+    </button>
     <div class="spacer"></div>
     <button class="icon" id="btn-alarm" title="알림 시간 설정">
       <svg viewBox="0 0 16 16"><circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2M3 3.5 4.8 2M13 3.5 11.2 2"/></svg>
@@ -30,6 +33,7 @@
     </button>
   </header>
 
+  <input id="title" class="title" type="text" maxlength="100" spellcheck="false" placeholder="제목 없음" autocomplete="off">
   <main>
     <textarea id="editor" spellcheck="false" placeholder="메모를 입력하세요"></textarea>
   </main>
@@ -91,6 +95,7 @@
     </div>
   </div>
 
+  <script src="format.js"></script>
   <script src="memo.js"></script>
 </body>
 </html>

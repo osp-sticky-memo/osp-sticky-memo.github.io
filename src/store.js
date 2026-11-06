@@ -6,6 +6,7 @@ const crypto = require('crypto');
 let filePath = null;
 let data = { version: 1, memos: [] };
 let saveTimer = null;
+const listeners = [];
 
 const COLORS = ['yellow', 'green', 'pink', 'purple', 'blue', 'gray'];
 
@@ -42,7 +43,10 @@ function migrateLegacy(dir) {
   }
 }
 
+function onChange(fn) { listeners.push(fn); }
+
 function scheduleSave() {
+  listeners.forEach((fn) => { try { fn(); } catch {} });
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flush, 300);
 }
@@ -63,6 +67,7 @@ function addMemo(init = {}) {
   const now = Date.now();
   const memo = {
     id: crypto.randomUUID(),
+    title: '',
     content: '',
     color: init.color || 'yellow',
     x: init.x, y: init.y,
@@ -84,7 +89,7 @@ function updateMemo(id, patch) {
   if (!memo) return null;
   if (patch.color && !COLORS.includes(patch.color)) delete patch.color;
   Object.assign(memo, patch);
-  if ('content' in patch) memo.updatedAt = Date.now();
+  if ('content' in patch || 'title' in patch) memo.updatedAt = Date.now();
   scheduleSave();
   return memo;
 }
@@ -94,4 +99,4 @@ function removeMemo(id) {
   scheduleSave();
 }
 
-module.exports = { load, flush, getMemos, getMemo, addMemo, updateMemo, removeMemo, COLORS };
+module.exports = { load, flush, onChange, getMemos, getMemo, addMemo, updateMemo, removeMemo, COLORS };

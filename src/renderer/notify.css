@@ -37,6 +37,7 @@ html, body { background: transparent; overflow: hidden; user-select: none; }
   overflow: hidden;
 }
 .content.empty { color: #999; }
+.ntitle { font-weight: 700; color: #111; }
 
 .side {
   flex: none;

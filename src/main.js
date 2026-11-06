@@ -17,6 +17,7 @@ const SNOOZE_MIN = 5;
 
 const memoWindows = new Map(); // memoId -> BrowserWindow
 let notifyWindows = [];        // 아래에서 위로 쌓이는 순서
+let listWindow = null;         // 메모 목록 창 (하나만)
 let tray = null;
 let schedulerTimer = null;
 let isQuitting = false;
@@ -25,7 +26,7 @@ let isQuitting = false;
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on('second-instance', () => showAllMemos());
+  app.on('second-instance', () => openListWindow());
 }
 
 // 윈도우 알림 그룹/작업표시줄 식별용
@@ -33,6 +34,7 @@ app.setAppUserModelId('com.ohsang.util.dingdongmemo');
 
 app.whenReady().then(() => {
   store.load(app.getPath('userData'));
+  store.onChange(debounce(broadcastList, 150)); // 메모가 바뀌면 목록 창 갱신
 
   createTray();
 
@@ -107,6 +109,7 @@ function openMemoWindow(id) {
   win.on('closed', () => {
     memoWindows.delete(id);
     refreshTrayMenu();
+    broadcastList();
   });
 
   memoWindows.set(id, win);
@@ -144,10 +147,58 @@ function deleteMemo(id) {
   }
 }
 
-function showAllMemos() {
-  const memos = store.getMemos();
-  if (memos.length === 0) { createMemo(); return; }
-  memos.forEach((m) => openMemoWindow(m.id));
+// ---------- 메모 목록 창 ----------
+function openListWindow() {
+  if (listWindow && !listWindow.isDestroyed()) {
+    if (listWindow.isMinimized()) listWindow.restore();
+    listWindow.show();
+    listWindow.focus();
+    return listWindow;
+  }
+  const wa = screen.getPrimaryDisplay().workArea;
+  const width = 380;
+  const height = Math.min(600, wa.height - 80);
+  listWindow = new BrowserWindow({
+    width, height,
+    x: wa.x + wa.width - width - 40,
+    y: wa.y + Math.round((wa.height - height) / 2),
+    minWidth: 300,
+    minHeight: 360,
+    title: '딩동메모 - 메모 목록',
+    autoHideMenuBar: true,
+    backgroundColor: '#fbf8f3',
+    show: false,
+    icon: path.join(ASSETS, 'icon.png'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  listWindow.setMenu(null);
+  listWindow.loadFile(path.join(__dirname, 'renderer', 'list.html'));
+  listWindow.once('ready-to-show', () => listWindow.show());
+  listWindow.on('closed', () => { listWindow = null; });
+  return listWindow;
+}
+
+// 목록 창에 보낼 요약 (본문 전체 대신 미리보기만)
+function listSummary() {
+  return store.getMemos().map((m) => ({
+    id: m.id,
+    title: (m.title || '').trim(),
+    preview: (m.content || '').replace(/\s+/g, ' ').trim().slice(0, 120),
+    color: m.color,
+    alarm: m.alarm,
+    snoozeAt: m.snoozeAt,
+    updatedAt: m.updatedAt || m.createdAt,
+    createdAt: m.createdAt,
+    open: memoWindows.has(m.id),
+  }));
+}
+
+function broadcastList() {
+  if (listWindow && !listWindow.isDestroyed()) listWindow.webContents.send('list:changed', listSummary());
 }
 
 function pushToMemo(id) {
@@ -176,25 +227,17 @@ function createTray() {
   const img = nativeImage.createFromPath(path.join(ASSETS, 'tray.png'));
   tray = new Tray(img);
   tray.setToolTip('딩동메모');
-  tray.on('click', showAllMemos);
+  tray.on('click', () => openListWindow());
   tray.on('double-click', () => createMemo());
   refreshTrayMenu();
 }
 
 function refreshTrayMenu() {
   if (!tray) return;
-  const memos = store.getMemos();
-  const memoItems = memos.slice(0, 15).map((m) => ({
-    label: `${m.alarm ? '⏰ ' : ''}${memoTitle(m)}`,
-    click: () => openMemoWindow(m.id),
-  }));
-
   const loginEnabled = app.getLoginItemSettings().openAtLogin;
   const menu = Menu.buildFromTemplate([
     { label: '새 메모', click: () => createMemo() },
-    { label: '모든 메모 보이기', click: showAllMemos },
-    { type: 'separator' },
-    ...(memoItems.length ? memoItems : [{ label: '메모 없음', enabled: false }]),
+    { label: '메모 목록 열기', click: () => openListWindow() },
     { type: 'separator' },
     {
       label: '윈도우 시작 시 자동 실행',
@@ -209,8 +252,9 @@ function refreshTrayMenu() {
   tray.setContextMenu(menu);
 }
 
+// 제목이 있으면 제목, 없으면 본문 첫 줄
 function memoTitle(m, empty = '(빈 메모)') {
-  const line = (m.content || '').split('\n').map((s) => s.trim()).find(Boolean);
+  const line = (m.title || '').trim() || (m.content || '').split('\n').map((s) => s.trim()).find(Boolean);
   if (!line) return empty;
   return line.length > 24 ? line.slice(0, 24) + '…' : line;
 }
@@ -290,6 +334,7 @@ function showNotification(memo, opts = {}) {
 
   const payload = {
     memoId: memo.id,
+    title: (memo.title || '').trim(),
     content: memo.content || '',
     color: memo.color || 'yellow',
     late: !!opts.late,
@@ -328,11 +373,15 @@ ipcMain.handle('memo:get', (_e, id) => store.getMemo(id));
 
 ipcMain.handle('memo:update', (_e, id, patch) => {
   const allowed = {};
-  for (const k of ['content', 'color']) if (k in patch) allowed[k] = patch[k];
-  const m = store.updateMemo(id, allowed);
-  if ('content' in allowed) refreshTrayMenu();
-  return m;
+  for (const k of ['title', 'content', 'color']) if (k in patch) allowed[k] = patch[k];
+  if (typeof allowed.title === 'string') allowed.title = allowed.title.slice(0, 100);
+  return store.updateMemo(id, allowed);
 });
+
+ipcMain.handle('list:get', () => listSummary());
+ipcMain.handle('list:open', (_e, id) => { openMemoWindow(id); });
+ipcMain.handle('list:new', () => { createMemo(); });
+ipcMain.handle('memo:open-list', () => { openListWindow(); });
 
 ipcMain.handle('memo:set-alarm', (_e, id, alarm) => {
   // alarm: { at: number(ms), repeat: 'none'|'daily'|'weekdays' } | null

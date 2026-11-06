@@ -2,6 +2,7 @@ const id = new URLSearchParams(location.search).get('id');
 const $ = (s) => document.querySelector(s);
 
 const editor = $('#editor');
+const titleIn = $('#title');
 const colorPanel = $('#color-panel');
 const alarmPanel = $('#alarm-panel');
 const deletePanel = $('#delete-panel');
@@ -18,12 +19,13 @@ async function init() {
   memo = await window.api.getMemo(id);
   if (!memo) return;
   editor.value = memo.content || '';
+  titleIn.value = memo.title || '';
   render();
   updateTitle();
 
   // 알림이 울려서 상태가 바뀌면 다시 그림
   window.api.onChanged((m) => { if (m) { memo = m; render(); } });
-  window.api.onFocusEditor(() => editor.focus());
+  window.api.onFocusEditor(() => titleIn.focus());
 
   // 1분마다 "오늘/내일" 표시 갱신
   setInterval(renderChip, 60 * 1000);
@@ -69,7 +71,7 @@ function renderChip() {
 let saveT;
 // 작업표시줄에서 메모를 구분할 수 있게 첫 줄을 창 제목으로
 function updateTitle() {
-  const line = editor.value.split('\n').map((s) => s.trim()).find(Boolean);
+  const line = titleIn.value.trim() || editor.value.split('\n').map((s) => s.trim()).find(Boolean);
   document.title = line ? (line.length > 30 ? line.slice(0, 30) + '…' : line) : '딩동메모';
 }
 
@@ -78,15 +80,28 @@ editor.addEventListener('input', () => {
   clearTimeout(saveT);
   saveT = setTimeout(() => window.api.updateMemo(id, { content: editor.value }), 300);
 });
+// 제목 저장, Enter 누르면 본문으로
+let titleT;
+titleIn.addEventListener('input', () => {
+  updateTitle();
+  clearTimeout(titleT);
+  titleT = setTimeout(() => window.api.updateMemo(id, { title: titleIn.value }), 300);
+});
+titleIn.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); editor.focus(); }
+});
+
 window.addEventListener('beforeunload', () => {
   clearTimeout(saveT);
-  window.api.updateMemo(id, { content: editor.value });
+  clearTimeout(titleT);
+  window.api.updateMemo(id, { title: titleIn.value, content: editor.value });
 });
 
 // ---------- 상단 버튼 ----------
 $('#btn-new').onclick = () => window.api.newMemo();
+$('#btn-list').onclick = () => window.api.openList();
 $('#btn-close').onclick = async () => {
-  await window.api.updateMemo(id, { content: editor.value });
+  await window.api.updateMemo(id, { title: titleIn.value, content: editor.value });
   window.api.hideMemo(id);
 };
 $('#btn-pin').onclick = async () => { memo = await window.api.togglePin(id); render(); };
@@ -194,21 +209,4 @@ function rollToWeekday(d) {
   const n = new Date(d);
   while (n.getDay() === 0 || n.getDay() === 6) n.setDate(n.getDate() + 1);
   return n;
-}
-
-// ---------- 표시 형식 ----------
-function pad(n) { return String(n).padStart(2, '0'); }
-
-function fmtWhen(ms) {
-  const d = new Date(ms);
-  const now = new Date();
-  const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const diff = Math.round((day(d) - day(now)) / 86400000);
-  const hm = `${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${pad(d.getMinutes())}`;
-  if (diff === 0) return `오늘 ${hm}`;
-  if (diff === 1) return `내일 ${hm}`;
-  if (diff === -1) return `어제 ${hm}`;
-  const wd = '일월화수목금토'[d.getDay()];
-  const y = d.getFullYear() !== now.getFullYear() ? `${d.getFullYear()}.` : '';
-  return `${y}${d.getMonth() + 1}/${d.getDate()}(${wd}) ${hm}`;
 }
