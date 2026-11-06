@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>스티커 메모</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="memo.css">
+</head>
+<body data-color="yellow">
+  <header class="bar">
+    <button class="icon" id="btn-new" title="새 메모">
+      <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>
+    </button>
+    <div class="spacer"></div>
+    <button class="icon" id="btn-alarm" title="알림 시간 설정">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2M3 3.5 4.8 2M13 3.5 11.2 2"/></svg>
+    </button>
+    <button class="icon" id="btn-pin" title="항상 위에 고정">
+      <svg viewBox="0 0 16 16"><path d="M10.5 2.5 13.5 5.5 11 8l-.5 3-5-5 3-.5zM6 10 2.5 13.5"/></svg>
+    </button>
+    <button class="icon" id="btn-color" title="색상">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.2"/><circle cx="8" cy="8" r="2" class="fill"/></svg>
+    </button>
+    <button class="icon" id="btn-delete" title="삭제">
+      <svg viewBox="0 0 16 16"><path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.6 8.5h4.8l.6-8.5"/></svg>
+    </button>
+    <button class="icon" id="btn-close" title="닫기 (트레이에서 다시 열 수 있어요)">
+      <svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <textarea id="editor" spellcheck="false" placeholder="메모를 입력하세요"></textarea>
+  </main>
+
+  <footer id="alarm-chip" hidden>
+    <button id="chip-btn" class="chip">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l1.8 1.2"/></svg>
+      <span id="chip-text"></span>
+    </button>
+  </footer>
+
+  <!-- 색상 선택 -->
+  <div class="panel" id="color-panel" hidden>
+    <div class="swatches">
+      <button data-c="yellow" title="노랑"></button>
+      <button data-c="green" title="초록"></button>
+      <button data-c="pink" title="분홍"></button>
+      <button data-c="purple" title="보라"></button>
+      <button data-c="blue" title="파랑"></button>
+      <button data-c="gray" title="회색"></button>
+    </div>
+  </div>
+
+  <!-- 알림 설정 -->
+  <div class="sheet" id="alarm-panel" hidden>
+    <div class="sheet-title">알림 시간</div>
+    <div class="row">
+      <input type="date" id="alarm-date">
+      <input type="time" id="alarm-time">
+    </div>
+    <div class="quick">
+      <button data-q="10m">+10분</button>
+      <button data-q="30m">+30분</button>
+      <button data-q="1h">+1시간</button>
+      <button data-q="tomorrow9">내일 9시</button>
+    </div>
+    <div class="seg" id="alarm-repeat">
+      <button data-r="none" class="on">한 번</button>
+      <button data-r="daily">매일</button>
+      <button data-r="weekdays">평일</button>
+    </div>
+    <div class="err" id="alarm-err"></div>
+    <div class="actions">
+      <button id="alarm-clear" class="ghost">알림 해제</button>
+      <div class="spacer"></div>
+      <button id="alarm-cancel" class="ghost">취소</button>
+      <button id="alarm-save" class="primary">저장</button>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 -->
+  <div class="sheet" id="delete-panel" hidden>
+    <div class="sheet-title">이 메모를 삭제할까요?</div>
+    <p class="muted">삭제한 메모는 되돌릴 수 없어요.</p>
+    <div class="actions">
+      <div class="spacer"></div>
+      <button id="delete-cancel" class="ghost">취소</button>
+      <button id="delete-ok" class="danger">삭제</button>
+    </div>
+  </div>
+
+  <script src="memo.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid rgba(0, 0, 0, .12);
+  overflow: hidden;
+  transition: background .2s;
+}
+
+/* 상단 바 - 드래그해서 이동 */
+.bar {
+  -webkit-app-region: drag;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  padding: 0 4px;
+  background: var(--bar);
+  flex: none;
+  transition: background .2s;
+}
+.bar .spacer { flex: 1; }
+.icon {
+  -webkit-app-region: no-drag;
+  width: 26px; height: 24px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  opacity: .55;
+}
+.icon:hover { opacity: 1; background: rgba(0, 0, 0, .07); }
+.icon.on { opacity: 1; color: var(--accent); }
+.icon svg, .chip svg {
+  width: 15px; height: 15px;
+  fill: none; stroke: currentColor; stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.icon svg .fill { fill: currentColor; stroke: none; }
+#btn-close:hover { background: #e5484d; color: #fff; }
+
+main { flex: 1; display: flex; min-height: 0; }
+#editor {
+  flex: 1;
+  border: 0; outline: 0; resize: none;
+  padding: 12px 14px;
+  background: transparent;
+  color: var(--ink);
+  font: 15px/1.6 var(--font);
+}
+#editor::placeholder { color: var(--ink); opacity: .35; }
+#editor::-webkit-scrollbar { width: 8px; }
+#editor::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .15); border-radius: 4px; }
+
+/* 하단 알림 표시 */
+footer { flex: none; padding: 0 8px 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  max-width: 100%;
+  padding: 4px 10px 4px 8px;
+  border: 0; border-radius: 999px;
+  background: rgba(0, 0, 0, .07);
+  color: var(--ink);
+  font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chip:hover { background: rgba(0, 0, 0, .12); }
+.chip.active { color: var(--accent); font-weight: 600; }
+.chip.done { opacity: .55; text-decoration: line-through; }
+
+/* 색상 패널 */
+.panel {
+  position: absolute; top: 32px; right: 6px;
+  padding: 8px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+  z-index: 10;
+}
+.swatches { display: grid; grid-template-columns: repeat(6, 22px); gap: 6px; }
+.swatches button {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, .15);
+  background: var(--bg);
+}
+.swatches button.on { outline: 2px solid #333; outline-offset: 1px; }
+
+/* 시트(알림 설정, 삭제 확인) */
+.sheet {
+  position: absolute; left: 0; right: 0; top: 30px; bottom: 0;
+  padding: 12px 14px;
+  background: var(--bg);
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 9;
+  overflow-y: auto;
+}
+.sheet-title { font-weight: 700; font-size: 14px; }
+.muted { margin: 0; font-size: 13px; opacity: .7; }
+.row { display: flex; gap: 6px; }
+.row input {
+  flex: 1; min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, .18); border-radius: 6px;
+  background: rgba(255, 255, 255, .7);
+  color: var(--ink);
+  font: 13px var(--font);
+}
+.quick { display: flex; flex-wrap: wrap; gap: 4px; }
+.quick button, .seg button {
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, .15); border-radius: 6px;
+  background: rgba(255, 255, 255, .5);
+  color: var(--ink);
+  font-size: 12px;
+}
+.quick button:hover { background: rgba(255, 255, 255, .9); }
+.seg { display: flex; }
+.seg button { flex: 1; border-radius: 0; margin-left: -1px; }
+.seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 6px 6px 0; }
+.seg button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.err { font-size: 12px; color: #c62828; min-height: 0; }
+.err:empty { display: none; }
+.actions { display: flex; gap: 6px; align-items: center; margin-top: auto; }
+.actions .spacer { flex: 1; }
+.actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+.ghost { background: transparent; color: var(--ink); border-color: rgba(0, 0, 0, .15) !important; }
+.ghost:hover { background: rgba(0, 0, 0, .06); }
+.primary { background: var(--accent); color: #fff; }
+.danger { background: #e5484d; color: #fff; }

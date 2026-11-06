@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>알림</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="notify.css">
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="stripe"></div>
+    <div class="body" id="open-area">
+      <div class="head">
+        <svg viewBox="0 0 16 16" class="bell"><path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1 1H3zM6.5 13.5a1.5 1.5 0 0 0 3 0"/></svg>
+        <span class="app">스티커 메모</span>
+        <span class="time" id="time"></span>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+    <div class="side">
+      <button class="x" id="btn-x" title="닫기">
+        <svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>
+      </button>
+      <button class="snooze" id="btn-snooze"></button>
+    </div>
+    <div class="progress" id="progress"></div>
+  </div>
+  <script src="notify.js"></script>
+</body>
+</html>

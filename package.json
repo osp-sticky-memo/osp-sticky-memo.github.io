@@ -1,0 +1,58 @@
+{
+  "name": "sticky-memo",
+  "productName": "스티커 메모",
+  "version": "0.1.0",
+  "description": "시간 알림이 되는 스티커 메모",
+  "author": "오상플레이",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.ohsang.util.stickymemo",
+    "productName": "스티커 메모",
+    "copyright": "© 2026 오상플레이",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "compression": "maximum",
+    "publish": null,
+    "electronLanguages": [
+      "ko",
+      "en-US"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "StickyMemo-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "스티커 메모"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/osp-sticky-memo/osp-sticky-memo.github.io.git"
+  },
+  "homepage": "https://ohsangplay.com/sticky-memo.html"
+}

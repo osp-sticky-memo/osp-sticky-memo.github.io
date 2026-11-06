@@ -1,0 +1,68 @@
+html, body { background: transparent; overflow: hidden; user-select: none; }
+
+.card {
+  position: absolute; inset: 0;
+  display: flex;
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid rgba(0, 0, 0, .14);
+  border-radius: 10px;
+  overflow: hidden;
+  animation: slide-in .28s cubic-bezier(.2, .9, .3, 1.1);
+}
+.card.leaving { animation: slide-out .22s ease-in forwards; }
+@keyframes slide-in { from { transform: translateX(110%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes slide-out { to { transform: translateX(110%); opacity: 0; } }
+
+.stripe { width: 6px; flex: none; background: var(--bar); border-right: 1px solid rgba(0, 0, 0, .06); }
+
+.body {
+  flex: 1; min-width: 0;
+  padding: 10px 6px 10px 12px;
+  cursor: pointer;
+}
+.body:hover .content { color: #000; }
+.head { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b6b6b; }
+.bell { width: 13px; height: 13px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; }
+.app { font-weight: 700; color: #333; }
+.time::before { content: "·"; margin-right: 6px; }
+.time.late { color: #d9480f; font-weight: 600; }
+
+.content {
+  margin-top: 6px;
+  font-size: 14px; line-height: 1.45;
+  color: #222;
+  white-space: pre-wrap; word-break: break-all;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.content.empty { color: #999; }
+
+.side {
+  flex: none;
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between;
+  padding: 6px 8px 10px 0;
+}
+.x {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 5px;
+  background: transparent; color: #888;
+}
+.x:hover { background: #f0f0f0; color: #222; }
+.x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.snooze {
+  padding: 4px 8px;
+  border: 1px solid #ddd; border-radius: 6px;
+  background: #fafafa; color: #444;
+  font-size: 12px; white-space: nowrap;
+}
+.snooze:hover { background: #f0f0f0; }
+.snooze[hidden] { display: none; }
+
+.progress {
+  position: absolute; left: 0; bottom: 0; height: 2px;
+  background: var(--accent); opacity: .5;
+  width: 100%;
+  transform-origin: left;
+}

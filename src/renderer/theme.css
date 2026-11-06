@@ -1,0 +1,15 @@
+/* 메모 색상 팔레트 - 메모 창과 알림 팝업이 같이 씀 */
+:root {
+  --font: "Pretendard", "Malgun Gothic", "맑은 고딕", "Segoe UI", system-ui, sans-serif;
+}
+[data-color="yellow"] { --bg: #fff7c2; --bar: #fbe98a; --accent: #c99a06; --ink: #3b3412; }
+[data-color="green"]  { --bg: #dff5d8; --bar: #bfe8b2; --accent: #3f8f2b; --ink: #1f3319; }
+[data-color="pink"]   { --bg: #ffe0ea; --bar: #ffc2d5; --accent: #c43c6b; --ink: #3d1a26; }
+[data-color="purple"] { --bg: #ece2ff; --bar: #d8c6ff; --accent: #6b47c9; --ink: #261a40; }
+[data-color="blue"]   { --bg: #dcefff; --bar: #b9dcfb; --accent: #2a72c2; --ink: #142a40; }
+[data-color="gray"]   { --bg: #eeeeea; --bar: #dcdcd6; --accent: #5e5e58; --ink: #2a2a27; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font-family: var(--font); }
+button { font-family: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
