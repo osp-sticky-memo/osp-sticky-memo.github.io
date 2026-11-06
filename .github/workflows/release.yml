@@ -53,7 +53,7 @@ jobs:
           cat > notes.md <<EOF
           딩동메모 $VERSION (Windows 10/11 64비트, 약 ${SIZE}MB)
 
-          다운로드 안내: https://ohsangplay.com/dingdong-memo.html
+          다운로드 안내: https://osp-sticky-memo.github.io/
 
           SHA-256: \`$SHA\`
           EOF

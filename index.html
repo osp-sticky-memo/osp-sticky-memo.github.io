@@ -2,11 +2,141 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>딩동메모</title>
-  <meta http-equiv="refresh" content="0; url=https://ohsangplay.com/dingdong-memo.html">
-  <link rel="canonical" href="https://ohsangplay.com/dingdong-memo.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>딩동메모 - Windows용 알림 메모</title>
+  <meta name="description" content="시간을 정해두면 화면 우측 하단에 메신저처럼 "딩동" 알림이 뜨는 Windows용 메모 프로그램, 딩동메모입니다. 반복 알림, 다시 알림, 트레이 상주를 지원하며 메모는 내 PC에만 저장됩니다.">
+  <link rel="canonical" href="https://osp-sticky-memo.github.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="오상플레이">
+  <meta property="og:title" content="딩동메모 - Windows용 알림 메모">
+  <meta property="og:description" content="시간을 정해두면 화면 우측 하단에 메신저처럼 "딩동" 알림이 뜨는 메모 프로그램입니다.">
+  <meta property="og:url" content="https://osp-sticky-memo.github.io/">
+  <meta property="og:image" content="https://osp-sticky-memo.github.io/web/screen.png">
+  <meta name="theme-color" content="#ff6a3d">
+  <link rel="icon" href="web/icon.png" type="image/png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="web/style.css?v=1">
 </head>
 <body>
-  <p><a href="https://ohsangplay.com/dingdong-memo.html">딩동메모 다운로드 페이지로 이동</a></p>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="https://ohsangplay.com/"><img src="web/logo.svg" alt="" width="32" height="32">오상플레이</a>
+      <nav class="nav" aria-label="주요 메뉴">
+        <a href="https://ohsangplay.com/">홈</a>
+        <a href="https://ohsangplay.com/about.html">소개</a>
+        <a href="https://ohsangplay.com/contact.html">문의</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section class="app-hero">
+        <img class="app-hero-icon" src="web/icon.png?v=2" alt="" width="96" height="96">
+        <div class="app-hero-body">
+          <span class="eyebrow">Windows 프로그램 · 무료</span>
+          <h1>딩동메모</h1>
+          <p>바탕화면에 붙여 두는 메모에 시간을 정해 두면, 그 시간에 화면 오른쪽 아래에 메신저처럼 알림이 떠요. 할 일이나 약속을 깜빡하지 않게 챙겨 주는 작은 프로그램입니다.</p>
+          <div class="download-row">
+            <a class="btn-download" id="download-link" href="https://github.com/osp-sticky-memo/osp-sticky-memo.github.io/releases/download/v0.1.2/DingDongMemo-Setup-0.1.2.exe" download>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>
+              Windows용 다운로드
+            </a>
+            <span class="download-meta">버전 0.1.2 · Windows 10/11 (64비트) · 약 107MB</span>
+          </div>
+        </div>
+      </section>
+
+      <figure class="app-shot">
+        <img src="web/screen.png" alt="바탕화면에 딩동메모 세 장이 붙어 있고, 오른쪽 아래에 메모 알림이 떠 있는 화면" width="840" height="500">
+        <figcaption>정한 시간이 되면 오른쪽 아래에 알림이 올라오고, 누르면 해당 메모가 열려요.</figcaption>
+      </figure>
+
+      <section aria-labelledby="feat-title">
+        <h2 class="section-title" id="feat-title">주요 기능</h2>
+        <p class="section-lead">메모를 쓰고, 시간을 정하고, 잊어버리면 됩니다.</p>
+        <div class="features features-2">
+          <div class="feature">
+            <h3>메신저 같은 알림</h3>
+            <p>알림 시간이 되면 오른쪽 아래에서 알림이 올라오고 짧은 알림음이 울려요. 작업 중인 창을 가리거나 포커스를 빼앗지 않아요.</p>
+          </div>
+          <div class="feature">
+            <h3>반복과 다시 알림</h3>
+            <p>한 번, 매일, 평일 반복을 고를 수 있어요. 알림에서 <b>5분 뒤</b>를 누르면 잠시 뒤 다시 알려 줘요.</p>
+          </div>
+          <div class="feature">
+            <h3>놓친 알림도 챙겨요</h3>
+            <p>PC가 절전 중이라 지나간 알림은 깨어날 때 "놓친 알림"으로 띄우고, 확인할 때까지 남겨 둬요.</p>
+          </div>
+          <div class="feature">
+            <h3>바탕화면에 그대로</h3>
+            <p>여섯 가지 색상, 항상 위 고정, 위치와 크기 기억. 창을 닫아도 작업 표시줄 트레이에 남아 알림이 계속 동작해요.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="prose app-prose" aria-labelledby="install-title">
+        <h2 id="install-title">설치 방법</h2>
+        <ol>
+          <li>위의 <b>Windows용 다운로드</b> 버튼으로 <code>DingDongMemo-Setup-0.1.2.exe</code>를 받아요.</li>
+          <li>받은 파일을 실행하고 설치 폴더를 고른 뒤 <b>설치</b>를 눌러요.</li>
+          <li>설치가 끝나면 바탕화면과 시작 메뉴의 <b>딩동메모</b>로 실행해요.</li>
+        </ol>
+        <div class="note">
+          <p><b>"Windows의 PC 보호" 창이 뜨면</b><br>
+          새로 나온 프로그램이라 Windows가 아직 이 파일을 알아보지 못해서 뜨는 안내예요. 창의 <b>추가 정보</b>를 누른 뒤 <b>실행</b>을 누르면 설치가 이어져요.</p>
+        </div>
+
+        <h2>사용 방법</h2>
+        <ul>
+          <li><b>새 메모:</b> 메모 위쪽의 <b>+</b>, 또는 트레이 아이콘을 두 번 클릭</li>
+          <li><b>알림 설정:</b> 메모 위쪽의 시계 버튼 → 날짜·시간과 반복을 고르고 <b>저장</b></li>
+          <li><b>메모 닫기와 다시 열기:</b> <b>✕</b>로 닫은 메모는 트레이 아이콘을 클릭하거나 오른쪽 클릭 메뉴에서 다시 열 수 있어요</li>
+          <li><b>윈도우 시작 시 자동 실행:</b> 트레이 아이콘 오른쪽 클릭 → <b>윈도우 시작 시 자동 실행</b> 체크</li>
+          <li><b>삭제:</b> 프로그램은 Windows 설정의 <b>앱 → 설치된 앱</b>에서 제거할 수 있어요</li>
+        </ul>
+
+        <h2>개인정보</h2>
+        <p>메모 내용과 알림 설정은 내 PC에만 저장되고, 어떤 서버로도 보내지 않아요. 로그인이나 회원가입도 없어요. 저장 위치는 <code>%APPDATA%\딩동메모\memos.json</code>이에요.</p>
+
+        <h2>업데이트 내역</h2>
+        <h3>0.1.2 <span class="muted-inline">2026년 11월 6일</span></h3>
+        <ul>
+          <li>메모 창이 작업표시줄에 보여요. 여러 메모는 딩동메모 아이콘 하나로 묶이고, 마우스를 올리면 메모 첫 줄로 구분돼요.</li>
+          <li>아이콘을 새로 바꿨어요.</li>
+        </ul>
+        <h3>0.1.1 <span class="muted-inline">2026년 11월 6일</span></h3>
+        <ul>
+          <li>이름을 <b>스티커 메모</b>에서 <b>딩동메모</b>로 바꿨어요. Windows에 기본으로 들어 있는 스티커 메모 앱과 헷갈리지 않도록요.</li>
+          <li>0.1.0을 쓰셨다면 새 버전을 설치하고 처음 실행할 때 기존 메모를 그대로 가져와요. 확인한 뒤 예전 <b>스티커 메모</b>는 <b>설정 → 앱 → 설치된 앱</b>에서 제거해 주세요.</li>
+        </ul>
+        <h3>0.1.0 <span class="muted-inline">2026년 11월 6일</span></h3>
+        <ul>
+          <li>첫 버전 공개</li>
+        </ul>
+
+        <p class="checksum">설치 파일의 SHA-256 값과 지난 버전은 <a href="https://github.com/osp-sticky-memo/osp-sticky-memo.github.io/releases" target="_blank" rel="noopener">릴리스 페이지</a>에서 확인할 수 있어요.</p>
+        <p>문제가 있거나 바라는 기능이 있으면 <a href="https://ohsangplay.com/contact.html">문의하기</a>로 알려 주세요.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav class="footer-links" aria-label="정책 및 안내">
+        <a href="https://ohsangplay.com/about.html">오상플레이 소개</a>
+        <a href="https://ohsangplay.com/privacy.html">개인정보처리방침</a>
+        <a href="https://ohsangplay.com/terms.html">이용약관</a>
+        <a href="https://ohsangplay.com/contact.html">문의하기</a>
+      </nav>
+      <p class="biz-info">
+        상호: 오상플레이 (OhsangPlay) · 대표: 오상원<br>
+        문의: <a href="mailto:contact@ohsangplay.com">contact@ohsangplay.com</a>
+      </p>
+      <p class="biz-info">© <span data-year>2026</span> OhsangPlay. All rights reserved.</p>
+    </div>
+  </footer>
+  <script>document.querySelectorAll("[data-year]").forEach(function(e){e.textContent=new Date().getFullYear()})</script>
 </body>
 </html>

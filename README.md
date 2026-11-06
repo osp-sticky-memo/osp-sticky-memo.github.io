@@ -27,9 +27,11 @@ npm run dist
    git tag v0.1.1 && git push origin v0.1.1
    ```
 3. GitHub Actions(`Release`)가 Windows에서 설치 파일을 빌드해 [Releases](https://github.com/osp-sticky-memo/osp-sticky-memo.github.io/releases)에 올려요.
-4. [ohsangplay.com 다운로드 페이지](https://ohsangplay.com/dingdong-memo.html)(`ohsangplay/ohsangplay.github.io`의 `dingdong-memo.html`)의 다운로드 주소·버전·업데이트 내역을 새 버전으로 바꿔요.
+4. [다운로드 페이지](https://osp-sticky-memo.github.io/)(이 저장소의 `index.html`)의 다운로드 주소·버전·업데이트 내역을 새 버전으로 바꿔요.
 
-이 저장소의 `index.html`은 GitHub Pages 주소로 들어오면 ohsangplay.com 다운로드 페이지로 보내는 용도예요.
+## 다운로드 페이지
+
+`index.html`과 `web/` 폴더가 GitHub Pages(https://osp-sticky-memo.github.io/)로 배포되는 소개·다운로드 페이지예요. 디자인은 ohsangplay.com과 같은 스타일(`web/style.css`)을 쓰고, ohsangplay.com 홈에는 이 페이지로 가는 카드만 있어요.
 
 ## 기능
 
