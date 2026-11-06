@@ -19,6 +19,7 @@ async function init() {
   if (!memo) return;
   editor.value = memo.content || '';
   render();
+  updateTitle();
 
   // 알림이 울려서 상태가 바뀌면 다시 그림
   window.api.onChanged((m) => { if (m) { memo = m; render(); } });
@@ -66,7 +67,14 @@ function renderChip() {
 
 // ---------- 편집 자동 저장 ----------
 let saveT;
+// 작업표시줄에서 메모를 구분할 수 있게 첫 줄을 창 제목으로
+function updateTitle() {
+  const line = editor.value.split('\n').map((s) => s.trim()).find(Boolean);
+  document.title = line ? (line.length > 30 ? line.slice(0, 30) + '…' : line) : '딩동메모';
+}
+
 editor.addEventListener('input', () => {
+  updateTitle();
   clearTimeout(saveT);
   saveT = setTimeout(() => window.api.updateMemo(id, { content: editor.value }), 300);
 });

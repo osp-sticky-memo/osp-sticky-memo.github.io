@@ -81,7 +81,8 @@ function openMemoWindow(id) {
     frame: false,
     transparent: false,
     backgroundColor: '#00000000',
-    skipTaskbar: true,
+    skipTaskbar: false, // 작업표시줄에 표시 (메모 창들은 딩동메모 아이콘 하나로 묶임)
+    title: memoTitle(memo, '딩동메모'),
     alwaysOnTop: !!memo.alwaysOnTop,
     show: false,
     icon: path.join(ASSETS, 'icon.png'),
@@ -208,9 +209,9 @@ function refreshTrayMenu() {
   tray.setContextMenu(menu);
 }
 
-function memoTitle(m) {
+function memoTitle(m, empty = '(빈 메모)') {
   const line = (m.content || '').split('\n').map((s) => s.trim()).find(Boolean);
-  if (!line) return '(빈 메모)';
+  if (!line) return empty;
   return line.length > 24 ? line.slice(0, 24) + '…' : line;
 }
 

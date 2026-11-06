@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- C: 둥근 앱 아이콘 배경 + 웃는 메모지 + 말풍선 꼬리 -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="#FF8A5C"/>
+  <path d="M116 112 h280 a24 24 0 0 1 24 24 v220 a24 24 0 0 1 -24 24 h-150 l-62 50 v-50 h-68 a24 24 0 0 1 -24 -24 v-220 a24 24 0 0 1 24 -24z" fill="#FFE066"/>
+  <path d="M116 112 h280 a24 24 0 0 1 24 24 v30 h-328 v-30 a24 24 0 0 1 24 -24z" fill="#FFCB2E"/>
+  <ellipse cx="206" cy="262" rx="20" ry="25" fill="#3A2C10"/>
+  <ellipse cx="306" cy="262" rx="20" ry="25" fill="#3A2C10"/>
+  <circle cx="213" cy="253" r="6.5" fill="#fff"/><circle cx="313" cy="253" r="6.5" fill="#fff"/>
+  <ellipse cx="166" cy="306" rx="22" ry="13" fill="#FF8FA3" opacity=".85"/>
+  <ellipse cx="346" cy="306" rx="22" ry="13" fill="#FF8FA3" opacity=".85"/>
+  <path d="M236 300 q20 24 40 0" fill="none" stroke="#3A2C10" stroke-width="11" stroke-linecap="round"/>
+  <g transform="translate(404 116) rotate(20)">
+    <path d="M-44 28 q0 -64 44 -64 q44 0 44 64 l10 12 h-108z" fill="#fff"/>
+    <circle cx="0" cy="48" r="11" fill="#fff"/>
+  </g>
+</svg>
