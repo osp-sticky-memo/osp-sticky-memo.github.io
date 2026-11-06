@@ -5,6 +5,7 @@ const qIn = $('#q');
 const sortSel = $('#sort');
 
 let memos = [];
+let renamingId = null;
 
 const SORT_KEY = 'list-sort';
 try { const v = localStorage.getItem(SORT_KEY); if (v) sortSel.value = v; } catch {}
@@ -14,7 +15,8 @@ init();
 async function init() {
   memos = await window.api.listMemos();
   render();
-  window.api.onListChanged((list) => { memos = list; render(); });
+  window.api.onListChanged((list) => { memos = list; if (!renamingId) render(); });
+  window.api.onRename((id) => startRename(id));
   qIn.focus();
 }
 
@@ -27,7 +29,7 @@ sortSel.addEventListener('change', () => {
 // 검색창에서 Enter → 첫 번째 메모 열기, ↓ → 목록으로
 qIn.addEventListener('keydown', (e) => {
   const first = listEl.querySelector('.item');
-  if (e.key === 'Enter' && first) first.click();
+  if (e.key === 'Enter' && first) window.api.openMemo(first.dataset.id);
   if (e.key === 'ArrowDown' && first) { e.preventDefault(); first.focus(); }
 });
 listEl.addEventListener('keydown', (e) => {
@@ -36,6 +38,9 @@ listEl.addEventListener('keydown', (e) => {
   if (i < 0) return;
   if (e.key === 'ArrowDown' && items[i + 1]) { e.preventDefault(); items[i + 1].focus(); }
   if (e.key === 'ArrowUp') { e.preventDefault(); (items[i - 1] || qIn).focus(); }
+  if (e.key === 'Enter') { e.preventDefault(); window.api.openMemo(items[i].dataset.id); }
+  if (e.key === 'F2') { e.preventDefault(); startRename(items[i].dataset.id); }
+  if (e.key === 'Delete') { e.preventDefault(); window.api.showContextMenu(items[i].dataset.id); }
 });
 
 function activeAlarmAt(m) {
@@ -65,6 +70,8 @@ function render() {
     if (s === 'title') return (a.title || firstLine(a) || '￿').localeCompare(b.title || firstLine(b) || '￿', 'ko');
     return b.updatedAt - a.updatedAt;
   });
+  // 상단 고정한 메모는 정렬과 상관없이 맨 위 (고정끼리는 위 정렬 유지)
+  rows = [...rows.filter((m) => m.pinned), ...rows.filter((m) => !m.pinned)];
 
   $('#count').textContent = memos.length ? memos.length : '';
   listEl.textContent = '';
@@ -80,10 +87,15 @@ function render() {
 
 function buildItem(m, q) {
   const li = document.createElement('li');
-  const btn = document.createElement('button');
-  btn.className = 'item';
+  // 안에 고정 버튼이 들어가므로 button 대신 포커스 가능한 div
+  const btn = document.createElement('div');
+  btn.className = 'item' + (m.pinned ? ' pinned' : '');
+  btn.tabIndex = 0;
+  btn.setAttribute('role', 'button');
+  btn.dataset.id = m.id;
   btn.dataset.color = m.color || 'yellow';
   btn.onclick = () => window.api.openMemo(m.id);
+  btn.oncontextmenu = (e) => { e.preventDefault(); btn.focus(); window.api.showContextMenu(m.id); };
 
   const sw = document.createElement('span');
   sw.className = 'swatch';
@@ -98,7 +110,14 @@ function buildItem(m, q) {
   const hasTitle = !!m.title;
   if (!hasTitle) t.classList.add('untitled');
   setHighlighted(tt, hasTitle ? m.title : (firstLine(m) || '빈 메모'), q);
+  tt.className = 'tt';
   t.appendChild(tt);
+  if (m.alwaysOnTop) {
+    const b = document.createElement('span');
+    b.className = 'badge soft';
+    b.textContent = '항상 위';
+    t.appendChild(b);
+  }
   if (m.open) {
     const b = document.createElement('span');
     b.className = 'badge';
@@ -132,9 +151,50 @@ function buildItem(m, q) {
   meta.appendChild(u);
   body.appendChild(meta);
 
-  btn.append(sw, body);
+  // 상단 고정 버튼
+  const pin = document.createElement('button');
+  pin.className = 'pin' + (m.pinned ? ' on' : '');
+  pin.title = m.pinned ? '상단 고정 해제' : '목록 상단에 고정';
+  pin.setAttribute('aria-pressed', m.pinned ? 'true' : 'false');
+  pin.innerHTML = '<svg viewBox="0 0 16 16"><path d="M10.5 2.5 13.5 5.5 11 8l-.5 3-5-5 3-.5zM6 10 2.5 13.5"/></svg>';
+  pin.onclick = (e) => { e.stopPropagation(); window.api.togglePinned(m.id); };
+  pin.onkeydown = (e) => e.stopPropagation();
+
+  btn.append(sw, body, pin);
   li.appendChild(btn);
   return li;
+}
+
+// ---------- 목록에서 제목 바로 바꾸기 ----------
+function startRename(id) {
+  const item = listEl.querySelector(`.item[data-id="${CSS.escape(id)}"]`);
+  const m = memos.find((x) => x.id === id);
+  if (!item || !m) return;
+  renamingId = id;
+  const t = item.querySelector('.t');
+  const input = document.createElement('input');
+  input.className = 'rename';
+  input.maxLength = 100;
+  input.value = m.title;
+  input.placeholder = '제목 입력';
+  t.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  const finish = (save) => {
+    if (done) return;
+    done = true;
+    renamingId = null;
+    if (save && input.value.trim() !== m.title) window.api.renameMemo(id, input.value.trim());
+    else render();
+  };
+  input.onclick = (e) => e.stopPropagation();
+  input.onkeydown = (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') finish(true);
+    if (e.key === 'Escape') finish(false);
+  };
+  input.onblur = () => finish(true);
 }
 
 // 검색어 부분을 <mark>로 (텍스트 노드로만 만들어서 안전하게)

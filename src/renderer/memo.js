@@ -24,7 +24,17 @@ async function init() {
   updateTitle();
 
   // 알림이 울려서 상태가 바뀌면 다시 그림
-  window.api.onChanged((m) => { if (m) { memo = m; render(); } });
+  window.api.onChanged((m) => {
+    if (!m) return;
+    memo = m;
+    // 목록에서 제목을 바꾼 경우 반영 (입력 중일 땐 건드리지 않음)
+    if (document.activeElement !== titleIn && titleIn.value !== (m.title || '')) {
+      titleIn.value = m.title || '';
+      updateTitle();
+    }
+    render();
+  });
+  window.api.onOpenAlarm(() => openAlarmPanel());
   window.api.onFocusEditor(() => titleIn.focus());
 
   // 1분마다 "오늘/내일" 표시 갱신

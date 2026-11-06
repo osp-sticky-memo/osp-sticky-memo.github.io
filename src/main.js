@@ -2,7 +2,7 @@
 // 역할: 메모 저장, 메모 창 관리, 트레이, 알림 스케줄러, 카톡식 알림 팝업
 
 const {
-  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage,
+  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, dialog,
 } = require('electron');
 const path = require('path');
 const store = require('./store');
@@ -193,8 +193,110 @@ function listSummary() {
     snoozeAt: m.snoozeAt,
     updatedAt: m.updatedAt || m.createdAt,
     createdAt: m.createdAt,
+    pinned: !!m.pinned,
+    alwaysOnTop: !!m.alwaysOnTop,
     open: memoWindows.has(m.id),
   }));
+}
+
+// ---------- 목록에서 메모 고치기 (우클릭 메뉴) ----------
+const COLOR_NAMES = { yellow: '노랑', green: '초록', pink: '분홍', purple: '보라', blue: '파랑', gray: '회색' };
+
+// 메모 창을 열고, 화면이 준비되면 메시지를 보냄
+function openMemoAnd(id, channel) {
+  const win = openMemoWindow(id);
+  if (!win) return;
+  if (win.webContents.isLoading()) win.webContents.once('did-finish-load', () => win.webContents.send(channel));
+  else win.webContents.send(channel);
+}
+
+function setAlwaysOnTop(id, on) {
+  const win = memoWindows.get(id);
+  if (win && !win.isDestroyed()) win.setAlwaysOnTop(on);
+  store.updateMemo(id, { alwaysOnTop: on });
+  pushToMemo(id);
+}
+
+function setAlarm(id, at, repeat = 'none') {
+  store.updateMemo(id, { alarm: at ? { at, repeat, done: false } : null, snoozeAt: null });
+  pushToMemo(id);
+}
+
+function quickTime(kind) {
+  const d = new Date();
+  d.setSeconds(0, 0);
+  if (kind === '10m') d.setMinutes(d.getMinutes() + 10);
+  if (kind === '30m') d.setMinutes(d.getMinutes() + 30);
+  if (kind === '1h') d.setHours(d.getHours() + 1);
+  if (kind === 'tomorrow9') { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+  return d.getTime();
+}
+
+async function confirmDelete(id, parent) {
+  const m = store.getMemo(id);
+  if (!m) return;
+  const { response } = await dialog.showMessageBox(parent, {
+    type: 'warning',
+    buttons: ['삭제', '취소'],
+    defaultId: 1,
+    cancelId: 1,
+    title: '딩동메모',
+    message: `'${memoTitle(m)}' 메모를 삭제할까요?`,
+    detail: '삭제한 메모는 되돌릴 수 없어요.',
+  });
+  if (response === 0) deleteMemo(id);
+}
+
+function showListContextMenu(id, sender) {
+  const m = store.getMemo(id);
+  if (!m) return;
+  const parent = BrowserWindow.fromWebContents(sender);
+  const isOpen = memoWindows.has(id);
+  const hasAlarm = !!(m.snoozeAt || (m.alarm && !m.alarm.done));
+  const repeat = m.alarm && !m.alarm.done ? (m.alarm.repeat || 'none') : null;
+
+  const menu = Menu.buildFromTemplate([
+    { label: isOpen ? '메모로 가기' : '메모 열기', click: () => openMemoWindow(id) },
+    { type: 'separator' },
+    { label: m.pinned ? '상단 고정 해제' : '목록 상단에 고정', click: () => store.updateMemo(id, { pinned: !m.pinned }) },
+    { label: '제목 바꾸기', click: () => sender.send('list:rename', id) },
+    {
+      label: '색상',
+      submenu: store.COLORS.map((c) => ({
+        label: COLOR_NAMES[c], type: 'radio', checked: m.color === c,
+        click: () => { store.updateMemo(id, { color: c }); pushToMemo(id); },
+      })),
+    },
+    {
+      label: '알림',
+      submenu: [
+        { label: '10분 뒤', click: () => setAlarm(id, quickTime('10m')) },
+        { label: '30분 뒤', click: () => setAlarm(id, quickTime('30m')) },
+        { label: '1시간 뒤', click: () => setAlarm(id, quickTime('1h')) },
+        { label: '내일 오전 9시', click: () => setAlarm(id, quickTime('tomorrow9')) },
+        { type: 'separator' },
+        { label: '시간 직접 설정…', click: () => openMemoAnd(id, 'memo:open-alarm') },
+        ...(repeat ? [
+          { type: 'separator' },
+          { label: '한 번만', type: 'radio', checked: repeat === 'none', click: () => setAlarm(id, m.alarm.at, 'none') },
+          { label: '매일 반복', type: 'radio', checked: repeat === 'daily', click: () => setAlarm(id, m.alarm.at, 'daily') },
+          { label: '평일 반복', type: 'radio', checked: repeat === 'weekdays', click: () => setAlarm(id, nextWeekday(m.alarm.at), 'weekdays') },
+        ] : []),
+        ...(hasAlarm ? [{ type: 'separator' }, { label: '알림 해제', click: () => setAlarm(id, null) }] : []),
+      ],
+    },
+    { label: '항상 위에 표시', type: 'checkbox', checked: !!m.alwaysOnTop, click: () => setAlwaysOnTop(id, !m.alwaysOnTop) },
+    { type: 'separator' },
+    ...(isOpen ? [{ label: '메모 창 닫기', click: () => hideMemo(id) }] : []),
+    { label: '삭제…', click: () => confirmDelete(id, parent) },
+  ]);
+  menu.popup({ window: parent });
+}
+
+function nextWeekday(ms) {
+  const d = new Date(ms);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  return d.getTime();
 }
 
 function broadcastList() {
@@ -381,6 +483,15 @@ ipcMain.handle('memo:update', (_e, id, patch) => {
 ipcMain.handle('list:get', () => listSummary());
 ipcMain.handle('list:open', (_e, id) => { openMemoWindow(id); });
 ipcMain.handle('list:new', () => { createMemo(); });
+ipcMain.handle('list:context', (e, id) => showListContextMenu(id, e.sender));
+ipcMain.handle('list:toggle-pinned', (_e, id) => {
+  const m = store.getMemo(id);
+  if (m) store.updateMemo(id, { pinned: !m.pinned });
+});
+ipcMain.handle('list:rename', (_e, id, title) => {
+  store.updateMemo(id, { title: String(title || '').slice(0, 100) });
+  pushToMemo(id);
+});
 ipcMain.handle('memo:open-list', () => { openListWindow(); });
 
 ipcMain.handle('memo:set-alarm', (_e, id, alarm) => {

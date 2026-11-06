@@ -74,9 +74,12 @@ select {
   background: var(--surface);
   text-align: left; color: inherit;
   overflow: hidden;
+  cursor: pointer;
+  user-select: none;
   transition: border-color .12s, box-shadow .12s;
 }
-.item:hover, .item:focus-visible { border-color: var(--accent); box-shadow: 0 2px 10px rgba(255, 106, 61, .12); outline: 0; }
+.item.pinned { background: #fffaf2; }
+.item:hover, .item:focus-visible { border-color: #ffb59b; box-shadow: 0 2px 10px rgba(255, 106, 61, .12); outline: 0; }
 .swatch { flex: none; width: 6px; background: var(--bar); }
 .body { flex: 1; min-width: 0; padding: 10px 12px 10px 11px; }
 .t {
@@ -91,6 +94,31 @@ select {
   background: var(--accent-soft); color: #c2410c;
   font-size: 11px; font-weight: 600;
 }
+.badge.soft { background: #f1ede6; color: var(--muted); }
+
+.pin {
+  flex: none; align-self: flex-start;
+  width: 30px; height: 30px; margin: 6px 6px 0 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 8px;
+  background: transparent; color: #b8b0a3;
+  opacity: 0;
+  transition: opacity .12s, background .12s, color .12s;
+}
+.item:hover .pin, .item:focus-within .pin, .pin:focus-visible, .pin.on { opacity: 1; }
+.pin:hover { background: #f4efe7; color: var(--text); }
+.pin.on { color: #ff6a3d; }
+.pin svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.pin.on svg { fill: currentColor; }
+
+.rename {
+  width: 100%;
+  padding: 3px 6px; margin: -3px -6px;
+  border: 1px solid #ff6a3d; border-radius: 6px; outline: 0;
+  font: 700 14.5px var(--font); color: var(--text);
+  background: #fff;
+}
+
 .p {
   margin-top: 3px;
   color: var(--muted); font-size: 13px; line-height: 1.45;

@@ -12,12 +12,17 @@ contextBridge.exposeInMainWorld('api', {
   onChanged: (cb) => ipcRenderer.on('memo:changed', (_e, memo) => cb(memo)),
   onFocusEditor: (cb) => ipcRenderer.on('memo:focus-editor', () => cb()),
   openList: () => ipcRenderer.invoke('memo:open-list'),
+  onOpenAlarm: (cb) => ipcRenderer.on('memo:open-alarm', () => cb()),
 
   // 메모 목록 창
   listMemos: () => ipcRenderer.invoke('list:get'),
   openMemo: (id) => ipcRenderer.invoke('list:open', id),
   newMemoFromList: () => ipcRenderer.invoke('list:new'),
   onListChanged: (cb) => ipcRenderer.on('list:changed', (_e, list) => cb(list)),
+  showContextMenu: (id) => ipcRenderer.invoke('list:context', id),
+  togglePinned: (id) => ipcRenderer.invoke('list:toggle-pinned', id),
+  renameMemo: (id, title) => ipcRenderer.invoke('list:rename', id, title),
+  onRename: (cb) => ipcRenderer.on('list:rename', (_e, id) => cb(id)),
 
   // 알림 팝업
   openFromNotify: (memoId) => ipcRenderer.invoke('notify:open', memoId),

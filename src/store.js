@@ -74,6 +74,7 @@ function addMemo(init = {}) {
     width: init.width, height: init.height,
     visible: true,
     alwaysOnTop: false,
+    pinned: false,    // 목록 상단 고정
     alarm: null,      // { at: ms, repeat: 'none'|'daily'|'weekdays', done: bool }
     snoozeAt: null,   // ms
     createdAt: now,
