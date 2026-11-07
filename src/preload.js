@@ -23,6 +23,16 @@ contextBridge.exposeInMainWorld('api', {
   togglePinned: (id) => ipcRenderer.invoke('list:toggle-pinned', id),
   renameMemo: (id, title) => ipcRenderer.invoke('list:rename', id, title),
   onRename: (cb) => ipcRenderer.on('list:rename', (_e, id) => cb(id)),
+  dragEnd: (id) => ipcRenderer.invoke('list:drag-end', id),
+
+  // 바탕화면 미니 메모
+  getMini: (id) => ipcRenderer.invoke('mini:get', id),
+  onMiniData: (cb) => ipcRenderer.on('mini:data', (_e, d) => cb(d)),
+  openFromMini: (id) => ipcRenderer.invoke('mini:open', id),
+  closeMini: (id) => ipcRenderer.invoke('mini:close', id),
+  miniContextMenu: (id) => ipcRenderer.invoke('mini:context', id),
+  moveMini: (x, y) => ipcRenderer.send('mini:move', x, y),
+  resizeMini: (w) => ipcRenderer.send('mini:resize', w),
 
   // 설정
   openSettings: () => ipcRenderer.invoke('settings:open'),

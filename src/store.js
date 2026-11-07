@@ -102,6 +102,7 @@ function addMemo(init = {}) {
     visible: true,
     alwaysOnTop: false,
     pinned: false,    // 목록 상단 고정
+    mini: null,       // 바탕화면에 꺼내 둔 미니 메모 위치 { x, y }
     alarm: null,      // { at: ms, repeat: 'none'|'daily'|'weekdays', done: bool }
     snoozeAt: null,   // ms
     createdAt: now,

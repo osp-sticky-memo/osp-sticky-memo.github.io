@@ -77,6 +77,7 @@ function render() {
   $('#count').textContent = memos.length ? memos.length : '';
   listEl.textContent = '';
   emptyEl.hidden = rows.length > 0;
+  $('#foot-hint').hidden = memos.length === 0;
   if (!rows.length) {
     emptyEl.textContent = memos.length ? `"${qIn.value.trim()}"에 맞는 메모가 없어요.` : '아직 메모가 없어요.\n오른쪽 위 새 메모로 시작해 보세요.';
     emptyEl.style.whiteSpace = 'pre-line';
@@ -98,6 +99,21 @@ function buildItem(m, q) {
   btn.onclick = () => window.api.openMemo(m.id);
   btn.oncontextmenu = (e) => { e.preventDefault(); btn.focus(); window.api.showContextMenu(m.id); };
 
+  // 목록 밖으로 끌어 놓으면 바탕화면에 미니 메모로 꺼내기
+  btn.draggable = true;
+  btn.addEventListener('dragstart', (e) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', m.title || firstLine(m) || '메모');
+    const ghost = makeGhost(m);
+    e.dataTransfer.setDragImage(ghost, 18, 16);
+    btn.classList.add('dragging');
+  });
+  btn.addEventListener('dragend', () => {
+    btn.classList.remove('dragging');
+    document.getElementById('drag-ghost')?.remove();
+    window.api.dragEnd(m.id);
+  });
+
   const sw = document.createElement('span');
   sw.className = 'swatch';
 
@@ -113,6 +129,13 @@ function buildItem(m, q) {
   setHighlighted(tt, hasTitle ? m.title : (firstLine(m) || '빈 메모'), q);
   tt.className = 'tt';
   t.appendChild(tt);
+  if (m.mini) {
+    const b = document.createElement('span');
+    b.className = 'badge soft';
+    b.textContent = '바탕화면';
+    b.title = '바탕화면에 미니 메모로 꺼내 둔 메모';
+    t.appendChild(b);
+  }
   if (m.alwaysOnTop) {
     const b = document.createElement('span');
     b.className = 'badge soft';
@@ -213,4 +236,20 @@ function setHighlighted(el, text, q) {
     el.appendChild(mk);
     i = j + q.length;
   }
+}
+
+// 끌 때 커서에 붙는 모양: 바탕화면에 생길 미니 메모처럼
+function makeGhost(m) {
+  document.getElementById('drag-ghost')?.remove();
+  const g = document.createElement('div');
+  g.id = 'drag-ghost';
+  g.className = 'ghost';
+  g.dataset.color = m.color || 'yellow';
+  const st = document.createElement('span');
+  st.className = 'ghost-stripe';
+  const tx = document.createElement('span');
+  tx.textContent = m.title || firstLine(m) || '빈 메모';
+  g.append(st, tx);
+  document.body.appendChild(g);
+  return g;
 }

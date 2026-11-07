@@ -138,4 +138,26 @@ select {
 .alarm svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
 mark { background: #ffe58a; color: inherit; border-radius: 2px; }
 
+.item.dragging { opacity: .45; }
+
+.ghost {
+  position: fixed; top: -200px; left: 0;
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; max-width: 280px; padding: 0 12px 0 0;
+  background: var(--bg); color: var(--ink);
+  border: 1px solid rgba(0, 0, 0, .14); border-radius: 9px;
+  overflow: hidden; white-space: nowrap;
+  font-size: 13.5px; font-weight: 700;
+}
+.ghost span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.ghost-stripe { align-self: stretch; width: 6px; flex: none; background: var(--bar); }
+
+.foot-hint {
+  flex: none; margin: 0;
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted); font-size: 12px; text-align: center;
+}
+.foot-hint[hidden] { display: none; }
+
 .empty { flex: 1; margin: 0; padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6; }

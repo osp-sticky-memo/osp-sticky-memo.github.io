@@ -19,6 +19,7 @@ const memoWindows = new Map(); // memoId -> BrowserWindow
 let notifyWindows = [];        // 아래에서 위로 쌓이는 순서
 let listWindow = null;         // 메모 목록 창 (하나만)
 let settingsWindow = null;     // 설정 창 (하나만)
+const miniWindows = new Map(); // memoId -> 바탕화면 미니 메모
 let tray = null;
 let schedulerTimer = null;
 let isQuitting = false;
@@ -35,7 +36,8 @@ app.setAppUserModelId('com.ohsang.util.dingdongmemo');
 
 app.whenReady().then(() => {
   store.load(app.getPath('userData'));
-  store.onChange(debounce(broadcastList, 150)); // 메모가 바뀌면 목록 창 갱신
+  // 메모가 바뀌면 목록 창과 미니 메모 갱신
+  store.onChange(debounce(() => { broadcastList(); refreshMinis(); }, 150));
 
   createTray();
 
@@ -44,6 +46,7 @@ app.whenReady().then(() => {
     createMemo();
   } else {
     memos.filter((m) => m.visible).forEach((m) => openMemoWindow(m.id));
+    memos.filter((m) => m.mini).forEach((m) => openMiniWindow(m.id));
   }
 
   startScheduler();
@@ -151,8 +154,10 @@ function hideMemo(id) {
 
 function deleteMemo(id) {
   const win = memoWindows.get(id);
+  const mini = miniWindows.get(id);
   store.removeMemo(id);
   if (win && !win.isDestroyed()) win.close();
+  if (mini && !mini.isDestroyed()) mini.close();
   refreshTrayMenu();
   if (store.getMemos().length === 0) {
     // 메모가 하나도 없으면 트레이에서 새로 만들 수 있으니 그대로 둠
@@ -207,6 +212,7 @@ function listSummary() {
     createdAt: m.createdAt,
     pinned: !!m.pinned,
     alwaysOnTop: !!m.alwaysOnTop,
+    mini: !!m.mini,
     open: memoWindows.has(m.id),
   }));
 }
@@ -298,6 +304,9 @@ function showListContextMenu(id, sender) {
       ],
     },
     { label: '항상 위에 표시', type: 'checkbox', checked: !!m.alwaysOnTop, click: () => setAlwaysOnTop(id, !m.alwaysOnTop) },
+    m.mini
+      ? { label: '바탕화면에서 미니 메모 치우기', click: () => closeMini(id) }
+      : { label: '바탕화면에 미니 메모로 꺼내기', click: () => openMiniWindow(id, screen.getCursorScreenPoint()) },
     { type: 'separator' },
     ...(isOpen ? [{ label: '메모 창 닫기', click: () => hideMemo(id) }] : []),
     { label: '삭제…', click: () => confirmDelete(id, parent) },
@@ -309,6 +318,112 @@ function nextWeekday(ms) {
   const d = new Date(ms);
   while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
   return d.getTime();
+}
+
+// ---------- 바탕화면 미니 메모 (목록에서 끌어내면 제목만 작게 표시) ----------
+const MINI_H = 44;      // 그림자 여백 포함 창 높이
+const MINI_MIN_W = 120;
+const MINI_MAX_W = 300;
+
+function miniData(m) {
+  return {
+    id: m.id,
+    title: memoTitle(m, '빈 메모'),
+    color: m.color || 'yellow',
+    alarm: !!(m.snoozeAt || (m.alarm && !m.alarm.done)),
+  };
+}
+
+// at: 놓은 화면 좌표(커서). 없으면 저장된 위치로 복원
+function openMiniWindow(id, at) {
+  const m = store.getMemo(id);
+  if (!m) return null;
+  const existing = miniWindows.get(id);
+  const width = existing && !existing.isDestroyed() ? existing.getBounds().width : 180;
+
+  let x, y;
+  if (at) { x = at.x - 18; y = at.y - Math.round(MINI_H / 2); }
+  else if (m.mini) { x = m.mini.x; y = m.mini.y; }
+  ({ x, y } = clampToDisplay({ x, y, width, height: MINI_H }, at));
+
+  if (existing && !existing.isDestroyed()) {
+    existing.setPosition(x, y);
+    existing.showInactive();
+    store.updateMemo(id, { mini: { x, y } });
+    return existing;
+  }
+
+  const win = new BrowserWindow({
+    x, y, width, height: MINI_H,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    hasShadow: false,
+    show: false,
+    title: m.title || '딩동메모',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  win.setAlwaysOnTop(true, 'floating');
+  win.loadFile(path.join(__dirname, 'renderer', 'mini.html'), { query: { id } });
+  win.once('ready-to-show', () => win.showInactive());
+
+  const savePos = debounce(() => {
+    if (win.isDestroyed() || !store.getMemo(id)) return;
+    const b = win.getBounds();
+    store.updateMemo(id, { mini: { x: b.x, y: b.y } });
+  }, 300);
+  win.on('move', savePos);
+  win.on('closed', () => miniWindows.delete(id));
+
+  miniWindows.set(id, win);
+  store.updateMemo(id, { mini: { x, y } });
+  return win;
+}
+
+function closeMini(id) {
+  const win = miniWindows.get(id);
+  if (store.getMemo(id)) store.updateMemo(id, { mini: null });
+  if (win && !win.isDestroyed()) win.close();
+}
+
+// 놓은 지점(또는 창 위치)이 있는 모니터 안으로 들어오게
+function clampToDisplay(b, point) {
+  const d = screen.getDisplayNearestPoint(point || { x: b.x ?? 0, y: b.y ?? 0 });
+  const wa = d.workArea;
+  if (b.x == null || b.y == null) return { x: wa.x + wa.width - b.width - 40, y: wa.y + 40 };
+  return {
+    x: Math.round(Math.min(Math.max(b.x, wa.x), wa.x + wa.width - b.width)),
+    y: Math.round(Math.min(Math.max(b.y, wa.y), wa.y + wa.height - b.height)),
+  };
+}
+
+function refreshMinis() {
+  for (const [id, win] of miniWindows) {
+    if (win.isDestroyed()) continue;
+    const m = store.getMemo(id);
+    if (!m) { win.close(); continue; }
+    win.webContents.send('mini:data', miniData(m));
+  }
+}
+
+function showMiniContextMenu(id, sender) {
+  const m = store.getMemo(id);
+  if (!m) return;
+  Menu.buildFromTemplate([
+    { label: '메모 열기', click: () => openMemoWindow(id) },
+    { label: '메모 목록 열기', click: () => openListWindow() },
+    { type: 'separator' },
+    { label: '바탕화면에서 치우기', click: () => closeMini(id) },
+  ]).popup({ window: BrowserWindow.fromWebContents(sender) });
 }
 
 function broadcastList() {
@@ -569,6 +684,33 @@ ipcMain.handle('list:rename', (_e, id, title) => {
   pushToMemo(id);
 });
 ipcMain.handle('memo:open-list', () => { openListWindow(); });
+
+// 목록에서 끌기를 끝냈을 때: 커서가 목록 창 밖이면 그 자리에 미니 메모
+ipcMain.handle('list:drag-end', (_e, id) => {
+  if (!listWindow || listWindow.isDestroyed() || !store.getMemo(id)) return false;
+  const p = screen.getCursorScreenPoint();
+  const b = listWindow.getBounds();
+  const inside = p.x >= b.x && p.x < b.x + b.width && p.y >= b.y && p.y < b.y + b.height;
+  if (inside) return false;
+  openMiniWindow(id, p);
+  return true;
+});
+
+ipcMain.handle('mini:get', (_e, id) => { const m = store.getMemo(id); return m ? miniData(m) : null; });
+ipcMain.handle('mini:open', (_e, id) => { openMemoWindow(id); });
+ipcMain.handle('mini:close', (_e, id) => closeMini(id));
+ipcMain.handle('mini:context', (e, id) => showMiniContextMenu(id, e.sender));
+ipcMain.on('mini:move', (e, x, y) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (win && Number.isFinite(x) && Number.isFinite(y)) win.setPosition(Math.round(x), Math.round(y));
+});
+ipcMain.on('mini:resize', (e, w) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (!win || !Number.isFinite(w)) return;
+  const b = win.getBounds();
+  const width = Math.round(Math.min(MINI_MAX_W, Math.max(MINI_MIN_W, w)));
+  if (width !== b.width) win.setBounds({ ...clampToDisplay({ x: b.x, y: b.y, width, height: MINI_H }), width, height: MINI_H });
+});
 
 ipcMain.handle('settings:open', () => openSettingsWindow());
 ipcMain.handle('settings:get', () => ({ ...store.getSettings(), openAtLogin: app.getLoginItemSettings().openAtLogin, displayCount: screen.getAllDisplays().length }));

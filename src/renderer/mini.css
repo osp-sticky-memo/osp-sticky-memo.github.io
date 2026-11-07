@@ -1,0 +1,41 @@
+html, body { background: transparent; overflow: hidden; user-select: none; }
+
+.pill {
+  position: absolute; left: 5px; top: 5px; bottom: 7px;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 8px 0 0;
+  max-width: calc(100% - 10px);
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid rgba(0, 0, 0, .14);
+  border-radius: 9px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .18);
+  overflow: hidden;
+  cursor: default;
+  white-space: nowrap;
+}
+.pill:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, .24); }
+.pill.dragging { cursor: grabbing; }
+
+.stripe { align-self: stretch; width: 6px; flex: none; background: var(--bar); border-right: 1px solid rgba(0, 0, 0, .06); }
+.bell { flex: none; width: 13px; height: 13px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linejoin: round; }
+.bell[hidden] { display: none; }
+.title {
+  min-width: 0;
+  overflow: hidden; text-overflow: ellipsis;
+  font-size: 13.5px; font-weight: 700; letter-spacing: -.01em;
+}
+.title.empty { opacity: .5; font-weight: 600; }
+
+.x {
+  flex: none;
+  width: 18px; height: 18px; margin-left: -2px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 5px;
+  background: transparent; color: var(--ink);
+  opacity: 0;
+  transition: opacity .12s;
+}
+.pill:hover .x { opacity: .45; }
+.x:hover { opacity: 1 !important; background: rgba(0, 0, 0, .08); }
+.x svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
