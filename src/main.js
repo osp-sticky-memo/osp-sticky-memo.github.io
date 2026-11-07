@@ -322,13 +322,16 @@ function nextWeekday(ms) {
 
 // ---------- 바탕화면 미니 메모 (목록에서 끌어내면 제목만 작게 표시) ----------
 const MINI_H = 44;      // 그림자 여백 포함 창 높이
-const MINI_MIN_W = 120;
-const MINI_MAX_W = 300;
+const MINI_MIN_W = 90;       // 사용자가 줄일 수 있는 최소 너비
+const MINI_AUTO_MAX_W = 300; // 자동으로 맞출 때 최대 너비
+const MINI_MAX_W = 800;      // 사용자가 늘릴 수 있는 최대 너비
 
 function miniData(m) {
   return {
     id: m.id,
-    title: memoTitle(m, '빈 메모'),
+    fixedWidth: !!m.mini?.width,
+    // 미니 메모는 제목 전체를 보내고, 좁으면 화면에서 … 처리
+    title: (m.title || '').trim() || (m.content || '').split('\n').map((x) => x.trim()).find(Boolean) || '빈 메모',
     color: m.color || 'yellow',
     alarm: !!(m.snoozeAt || (m.alarm && !m.alarm.done)),
   };
@@ -339,7 +342,7 @@ function openMiniWindow(id, at) {
   const m = store.getMemo(id);
   if (!m) return null;
   const existing = miniWindows.get(id);
-  const width = existing && !existing.isDestroyed() ? existing.getBounds().width : 180;
+  const width = existing && !existing.isDestroyed() ? existing.getBounds().width : (m.mini?.width || 180);
 
   let x, y;
   if (at) { x = at.x - 18; y = at.y - Math.round(MINI_H / 2); }
@@ -349,7 +352,7 @@ function openMiniWindow(id, at) {
   if (existing && !existing.isDestroyed()) {
     existing.setPosition(x, y);
     existing.showInactive();
-    store.updateMemo(id, { mini: { x, y } });
+    store.updateMemo(id, { mini: { ...(m.mini || {}), x, y } });
     return existing;
   }
 
@@ -379,13 +382,13 @@ function openMiniWindow(id, at) {
   const savePos = debounce(() => {
     if (win.isDestroyed() || !store.getMemo(id)) return;
     const b = win.getBounds();
-    store.updateMemo(id, { mini: { x: b.x, y: b.y } });
+    store.updateMemo(id, { mini: { ...(store.getMemo(id).mini || {}), x: b.x, y: b.y } });
   }, 300);
   win.on('move', savePos);
   win.on('closed', () => miniWindows.delete(id));
 
   miniWindows.set(id, win);
-  store.updateMemo(id, { mini: { x, y } });
+  store.updateMemo(id, { mini: { ...(m.mini || {}), x, y } });
   return win;
 }
 
@@ -406,6 +409,21 @@ function clampToDisplay(b, point) {
   };
 }
 
+// 사용자가 정한 길이를 지우고 제목 길이에 맞추기
+function resetMiniWidth(id) {
+  const m = store.getMemo(id);
+  if (!m?.mini) return;
+  const { width, ...rest } = m.mini;
+  store.updateMemo(id, { mini: rest });
+}
+
+function setMiniWidth(win, w, max) {
+  const b = win.getBounds();
+  const width = Math.round(Math.min(max, Math.max(MINI_MIN_W, w)));
+  if (width !== b.width) win.setBounds({ ...clampToDisplay({ x: b.x, y: b.y, width, height: MINI_H }), width, height: MINI_H });
+  return width;
+}
+
 function refreshMinis() {
   for (const [id, win] of miniWindows) {
     if (win.isDestroyed()) continue;
@@ -422,6 +440,7 @@ function showMiniContextMenu(id, sender) {
     { label: '메모 열기', click: () => openMemoWindow(id) },
     { label: '메모 목록 열기', click: () => openListWindow() },
     { type: 'separator' },
+    ...(m.mini?.width ? [{ label: '길이 자동으로 맞추기', click: () => resetMiniWidth(id) }] : []),
     { label: '바탕화면에서 치우기', click: () => closeMini(id) },
   ]).popup({ window: BrowserWindow.fromWebContents(sender) });
 }
@@ -456,8 +475,9 @@ function createTray() {
   const img = nativeImage.createFromPath(path.join(ASSETS, 'tray.png'));
   tray = new Tray(img);
   tray.setToolTip('딩동메모');
+  // 클릭·더블클릭 모두 메모 목록만 열기 (새 메모는 목록이나 메뉴에서)
   tray.on('click', () => openListWindow());
-  tray.on('double-click', () => createMemo());
+  tray.on('double-click', () => openListWindow());
   refreshTrayMenu();
 }
 
@@ -704,13 +724,23 @@ ipcMain.on('mini:move', (e, x, y) => {
   const win = BrowserWindow.fromWebContents(e.sender);
   if (win && Number.isFinite(x) && Number.isFinite(y)) win.setPosition(Math.round(x), Math.round(y));
 });
-ipcMain.on('mini:resize', (e, w) => {
+// 제목 길이에 맞춘 자동 너비 (사용자가 길이를 정했으면 무시)
+ipcMain.on('mini:resize', (e, id, w) => {
   const win = BrowserWindow.fromWebContents(e.sender);
-  if (!win || !Number.isFinite(w)) return;
-  const b = win.getBounds();
-  const width = Math.round(Math.min(MINI_MAX_W, Math.max(MINI_MIN_W, w)));
-  if (width !== b.width) win.setBounds({ ...clampToDisplay({ x: b.x, y: b.y, width, height: MINI_H }), width, height: MINI_H });
+  const m = store.getMemo(id);
+  if (!win || !m || !Number.isFinite(w) || m.mini?.width) return;
+  setMiniWidth(win, w, MINI_AUTO_MAX_W);
 });
+// 사용자가 오른쪽 끝을 끌어서 길이 조절
+ipcMain.on('mini:set-width', (e, id, w) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  const m = store.getMemo(id);
+  if (!win || !m || !Number.isFinite(w)) return;
+  const width = setMiniWidth(win, w, MINI_MAX_W);
+  const b = win.getBounds();
+  store.updateMemo(id, { mini: { ...(m.mini || {}), x: b.x, y: b.y, width } });
+});
+ipcMain.handle('mini:reset-width', (_e, id) => resetMiniWidth(id));
 
 ipcMain.handle('settings:open', () => openSettingsWindow());
 ipcMain.handle('settings:get', () => ({ ...store.getSettings(), openAtLogin: app.getLoginItemSettings().openAtLogin, displayCount: screen.getAllDisplays().length }));

@@ -32,7 +32,9 @@ contextBridge.exposeInMainWorld('api', {
   closeMini: (id) => ipcRenderer.invoke('mini:close', id),
   miniContextMenu: (id) => ipcRenderer.invoke('mini:context', id),
   moveMini: (x, y) => ipcRenderer.send('mini:move', x, y),
-  resizeMini: (w) => ipcRenderer.send('mini:resize', w),
+  resizeMini: (id, w) => ipcRenderer.send('mini:resize', id, w),
+  setMiniWidth: (id, w) => ipcRenderer.send('mini:set-width', id, w),
+  resetMiniWidth: (id) => ipcRenderer.invoke('mini:reset-width', id),
 
   // 설정
   openSettings: () => ipcRenderer.invoke('settings:open'),

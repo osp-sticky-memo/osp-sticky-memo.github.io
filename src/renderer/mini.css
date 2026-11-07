@@ -1,10 +1,9 @@
 html, body { background: transparent; overflow: hidden; user-select: none; }
 
 .pill {
-  position: absolute; left: 5px; top: 5px; bottom: 7px;
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 0 8px 0 0;
-  max-width: calc(100% - 10px);
+  position: absolute; left: 5px; right: 5px; top: 5px; bottom: 7px;
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 10px 0 0;
   background: var(--bg);
   color: var(--ink);
   border: 1px solid rgba(0, 0, 0, .14);
@@ -21,11 +20,26 @@ html, body { background: transparent; overflow: hidden; user-select: none; }
 .bell { flex: none; width: 13px; height: 13px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linejoin: round; }
 .bell[hidden] { display: none; }
 .title {
-  min-width: 0;
+  flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis;
   font-size: 13.5px; font-weight: 700; letter-spacing: -.01em;
 }
 .title.empty { opacity: .5; font-weight: 600; }
+
+.grip {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 7px;
+  cursor: ew-resize;
+}
+.grip::after {
+  content: ""; position: absolute; right: 2px; top: 50%;
+  width: 2px; height: 12px; margin-top: -6px;
+  border-radius: 1px; background: currentColor;
+  opacity: 0; transition: opacity .12s;
+}
+.pill:hover .grip::after { opacity: .25; }
+.pill.resizing { cursor: ew-resize; }
+.pill.resizing .grip::after { opacity: .5; }
 
 .x {
   flex: none;
