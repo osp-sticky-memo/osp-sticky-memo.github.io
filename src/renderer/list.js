@@ -22,6 +22,8 @@ async function init() {
 
 $('#btn-new').onclick = () => window.api.newMemoFromList();
 $('#btn-settings').onclick = () => window.api.openSettings();
+window.api.getUpdateState().then((u) => { $('#app-ver').textContent = `v${u.current}`; });
+$('#site-link').onclick = (e) => { e.preventDefault(); window.api.openSite(); };
 qIn.addEventListener('input', render);
 sortSel.addEventListener('change', () => {
   try { localStorage.setItem(SORT_KEY, sortSel.value); } catch {}

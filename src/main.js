@@ -2,7 +2,7 @@
 // 역할: 메모 저장, 메모 창 관리, 트레이, 알림 스케줄러, 카톡식 알림 팝업
 
 const {
-  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, dialog,
+  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, dialog, shell,
 } = require('electron');
 const path = require('path');
 const store = require('./store');
@@ -727,6 +727,7 @@ ipcMain.handle('settings:set', (_e, patch) => {
 ipcMain.handle('settings:test', () => testNotification());
 
 ipcMain.handle('update:state', () => updater.getState());
+ipcMain.handle('app:open-site', () => shell.openExternal('https://ohsangplay.com/'));
 ipcMain.handle('update:check', () => updater.check());
 ipcMain.handle('update:install', (e) => {
   const ok = updater.installNow();

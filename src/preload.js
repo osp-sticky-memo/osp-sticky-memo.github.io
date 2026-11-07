@@ -42,6 +42,7 @@ contextBridge.exposeInMainWorld('api', {
 
   // 업데이트
   getUpdateState: () => ipcRenderer.invoke('update:state'),
+  openSite: () => ipcRenderer.invoke('app:open-site'),
   checkUpdate: () => ipcRenderer.invoke('update:check'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),
