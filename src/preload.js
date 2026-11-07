@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('api', {
   togglePinned: (id) => ipcRenderer.invoke('list:toggle-pinned', id),
   renameMemo: (id, title) => ipcRenderer.invoke('list:rename', id, title),
   onRename: (cb) => ipcRenderer.on('list:rename', (_e, id) => cb(id)),
+  onConfirmDelete: (cb) => ipcRenderer.on('list:confirm-delete', (_e, id) => cb(id)),
+  deleteFromList: (id) => ipcRenderer.invoke('list:delete', id),
   dragEnd: (id) => ipcRenderer.invoke('list:drag-end', id),
 
   // 바탕화면 미니 메모

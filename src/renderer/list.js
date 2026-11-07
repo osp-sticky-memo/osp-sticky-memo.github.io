@@ -59,7 +59,7 @@ listEl.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowUp') { e.preventDefault(); (items[i - 1] || qIn).focus(); }
   if (e.key === 'Enter') { e.preventDefault(); window.api.openMemo(items[i].dataset.id); }
   if (e.key === 'F2') { e.preventDefault(); startRename(items[i].dataset.id); }
-  if (e.key === 'Delete') { e.preventDefault(); window.api.showContextMenu(items[i].dataset.id); }
+  if (e.key === 'Delete') { e.preventDefault(); askDelete(items[i].dataset.id); }
 });
 
 function activeAlarmAt(m) {
@@ -271,3 +271,46 @@ function makeGhost(m) {
   document.body.appendChild(g);
   return g;
 }
+
+// ---------- 삭제 확인 (윈도우 기본 창 대신) ----------
+const confirmEl = $('#confirm');
+let confirmId = null;
+let confirmReturn = null;
+
+function askDelete(id) {
+  const m = memos.find((x) => x.id === id);
+  if (!m) return;
+  confirmId = id;
+  confirmReturn = document.activeElement;
+  const memoEl = $('#confirm-memo');
+  memoEl.dataset.color = m.color || 'yellow';
+  memoEl.textContent = m.title || firstLine(m) || '빈 메모';
+  confirmEl.hidden = false;
+  $('#confirm-cancel').focus(); // 실수로 Enter를 눌러도 지워지지 않게 취소에 먼저
+}
+
+function closeConfirm() {
+  confirmEl.hidden = true;
+  confirmId = null;
+  if (confirmReturn && document.contains(confirmReturn)) confirmReturn.focus();
+}
+
+window.api.onConfirmDelete(askDelete);
+$('#confirm-cancel').onclick = closeConfirm;
+$('#confirm-ok').onclick = async () => {
+  const id = confirmId;
+  closeConfirm();
+  if (id) await window.api.deleteFromList(id);
+};
+confirmEl.addEventListener('mousedown', (e) => { if (e.target === confirmEl) closeConfirm(); });
+document.addEventListener('keydown', (e) => {
+  if (confirmEl.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeConfirm(); }
+  // 확인 창이 떠 있는 동안 Tab이 두 버튼 안에서만 돌게
+  if (e.key === 'Tab') {
+    const btns = [$('#confirm-cancel'), $('#confirm-ok')];
+    const i = btns.indexOf(document.activeElement);
+    e.preventDefault();
+    btns[(i + 1) % 2].focus();
+  }
+}, true);

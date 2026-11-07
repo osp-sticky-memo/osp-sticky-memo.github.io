@@ -36,6 +36,20 @@
   <ul id="list" class="list" aria-label="메모"></ul>
   <p id="empty" class="empty" hidden></p>
   <p class="foot-hint" id="foot-hint">메모를 목록 밖으로 끌어다 놓으면 바탕화면에 작게 꺼내 둘 수 있어요.</p>
+  <div class="confirm" id="confirm" hidden>
+    <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-desc">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 16 16"><path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M5 4.5l.6 8.5h4.8l.6-8.5"/></svg>
+      </div>
+      <h2 id="confirm-title">메모를 삭제할까요?</h2>
+      <p class="confirm-memo" id="confirm-memo"></p>
+      <p class="confirm-desc" id="confirm-desc">삭제한 메모는 되돌릴 수 없어요.</p>
+      <div class="confirm-actions">
+        <button id="confirm-cancel" class="c-ghost">취소</button>
+        <button id="confirm-ok" class="c-danger">삭제</button>
+      </div>
+    </div>
+  </div>
   <footer class="app-foot">
     <span id="app-ver"></span>
     <a href="#" id="site-link">© 오상플레이 · ohsangplay.com</a>

@@ -2,7 +2,7 @@
 // 역할: 메모 저장, 메모 창 관리, 트레이, 알림 스케줄러, 카톡식 알림 팝업
 
 const {
-  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, dialog, shell,
+  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, shell,
 } = require('electron');
 const path = require('path');
 const store = require('./store');
@@ -252,20 +252,6 @@ function quickTime(kind) {
   return d.getTime();
 }
 
-async function confirmDelete(id, parent) {
-  const m = store.getMemo(id);
-  if (!m) return;
-  const { response } = await dialog.showMessageBox(parent, {
-    type: 'warning',
-    buttons: ['삭제', '취소'],
-    defaultId: 1,
-    cancelId: 1,
-    title: '딩동메모',
-    message: `'${memoTitle(m)}' 메모를 삭제할까요?`,
-    detail: '삭제한 메모는 되돌릴 수 없어요.',
-  });
-  if (response === 0) deleteMemo(id);
-}
 
 function showListContextMenu(id, sender) {
   const m = store.getMemo(id);
@@ -311,7 +297,8 @@ function showListContextMenu(id, sender) {
       : { label: '바탕화면에 미니 메모로 꺼내기', click: () => openMiniWindow(id, screen.getCursorScreenPoint()) },
     { type: 'separator' },
     ...(isOpen ? [{ label: '메모 창 닫기', click: () => hideMemo(id) }] : []),
-    { label: '삭제…', click: () => confirmDelete(id, parent) },
+    // 삭제 확인은 목록 창 안의 딩동메모 스타일 확인 창으로
+    { label: '삭제…', click: () => sender.send('list:confirm-delete', id) },
   ]);
   menu.popup({ window: parent });
 }
@@ -697,6 +684,7 @@ ipcMain.handle('list:get', () => listSummary());
 ipcMain.handle('list:open', (_e, id) => { openMemoWindow(id); });
 ipcMain.handle('list:new', () => { createMemo(); });
 ipcMain.handle('list:context', (e, id) => showListContextMenu(id, e.sender));
+ipcMain.handle('list:delete', (_e, id) => deleteMemo(id));
 ipcMain.handle('list:toggle-pinned', (_e, id) => {
   const m = store.getMemo(id);
   if (m) store.updateMemo(id, { pinned: !m.pinned });
