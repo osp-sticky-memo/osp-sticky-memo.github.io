@@ -111,6 +111,7 @@ input[type="range"] { width: 100%; margin: 10px 0 2px; accent-color: var(--brand
 .up-status.ok { color: #2f7d32; }
 .up-status.err { color: #c62828; }
 .up-status.ready { color: var(--brand); font-weight: 700; }
+.up-last { margin-top: 2px; font-size: 11.5px; color: #a39c90; }
 .bar { margin-top: 6px; height: 4px; border-radius: 2px; background: #eee7dc; overflow: hidden; }
 .bar span { display: block; height: 100%; width: 0; background: var(--brand); transition: width .3s; }
 .small-btn {

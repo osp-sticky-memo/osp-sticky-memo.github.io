@@ -168,6 +168,12 @@ mark { background: #ffe58a; color: inherit; border-radius: 2px; }
   color: #a39c90; font-size: 11px;
 }
 .app-foot a { color: inherit; text-decoration: none; }
+.ver-update {
+  padding: 2px 8px; border: 0; border-radius: 999px;
+  background: var(--accent-soft); color: #c2410c;
+  font: 700 11px var(--font);
+}
+.ver-update:hover { background: #ffe1d3; }
 .app-foot a:hover { color: var(--muted); text-decoration: underline; }
 
 .empty { flex: 1; margin: 0; padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6; }

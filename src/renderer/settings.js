@@ -71,6 +71,13 @@ function renderUpdate(u) {
     default: st.textContent = '';
   }
   btn.dataset.status = u.status;
+  $('#up-last').textContent = u.lastCheckAt ? `마지막 확인 ${lastCheckText(u.lastCheckAt)}` : '';
+}
+
+function lastCheckText(ms) {
+  const d = new Date(ms);
+  const hm = `${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return new Date().toDateString() === d.toDateString() ? `오늘 ${hm}` : `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
 }
 
 $('#btn-update').onclick = async () => {

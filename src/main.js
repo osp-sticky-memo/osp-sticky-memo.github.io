@@ -50,14 +50,15 @@ app.whenReady().then(() => {
   }
 
   startScheduler();
-  powerMonitor.on('resume', checkAlarms);   // 절전 해제 시 놓친 알림 처리
-  powerMonitor.on('unlock-screen', checkAlarms);
+  // 절전 해제 시 놓친 알림 처리, 업데이트도 오래됐으면 확인
+  powerMonitor.on('resume', () => { checkAlarms(); updater.checkIfStale('resume'); });
+  powerMonitor.on('unlock-screen', () => { checkAlarms(); updater.checkIfStale('unlock'); });
 
   let lastUpdateStatus = null;
   updater.init({
     isEnabled: () => store.getSettings().autoUpdate,
     onStatus: (s) => {
-      if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('update:status', s);
+      for (const w of [settingsWindow, listWindow]) if (w && !w.isDestroyed()) w.webContents.send('update:status', s);
       if (s.status !== lastUpdateStatus) { lastUpdateStatus = s.status; refreshTrayMenu(); }
     },
     onDownloaded: (version) => showNotification({ id: null, color: 'yellow' }, { update: version }),
@@ -166,6 +167,7 @@ function deleteMemo(id) {
 
 // ---------- 메모 목록 창 ----------
 function openListWindow() {
+  updater.checkIfStale('list');
   if (listWindow && !listWindow.isDestroyed()) {
     if (listWindow.isMinimized()) listWindow.restore();
     listWindow.show();

@@ -22,7 +22,23 @@ async function init() {
 
 $('#btn-new').onclick = () => window.api.newMemoFromList();
 $('#btn-settings').onclick = () => window.api.openSettings();
-window.api.getUpdateState().then((u) => { $('#app-ver').textContent = `v${u.current}`; });
+// 하단 왼쪽: 버전. 새 버전을 받아 두었으면 '재시작해서 업데이트'로 바뀜
+function paintVersion(u) {
+  const el = $('#app-ver');
+  el.textContent = '';
+  if (u.status === 'ready') {
+    const b = document.createElement('button');
+    b.className = 'ver-update';
+    b.textContent = `v${u.version} 업데이트 · 재시작`;
+    b.title = `지금 v${u.current} → 재시작하면 v${u.version}으로 바뀌어요`;
+    b.onclick = () => window.api.installUpdate();
+    el.appendChild(b);
+  } else {
+    el.textContent = `v${u.current}`;
+  }
+}
+window.api.getUpdateState().then(paintVersion);
+window.api.onUpdateStatus(paintVersion);
 $('#site-link').onclick = (e) => { e.preventDefault(); window.api.openSite(); };
 qIn.addEventListener('input', render);
 sortSel.addEventListener('change', () => {
