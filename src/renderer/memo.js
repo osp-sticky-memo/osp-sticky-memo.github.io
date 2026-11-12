@@ -220,3 +220,122 @@ function rollToWeekday(d) {
   while (n.getDay() === 0 || n.getDay() === 6) n.setDate(n.getDate() + 1);
   return n;
 }
+
+// ---------- 찾기 (Ctrl+F) ----------
+const findBar = $('#find');
+const findQ = $('#find-q');
+const findCount = $('#find-count');
+const hl = $('#hl');
+let matches = [];   // [{ start, end }]
+let cur = -1;
+
+function openFind() {
+  // 본문에서 고른 글자가 있으면 그걸로 찾기
+  const sel = editor.value.slice(editor.selectionStart, editor.selectionEnd);
+  if (document.activeElement === editor && sel && !sel.includes('\n') && sel.length <= 50) findQ.value = sel;
+  findBar.hidden = false;
+  findQ.focus();
+  findQ.select();
+  runFind(true);
+}
+
+function closeFind() {
+  findBar.hidden = true;
+  const m = matches[cur];
+  matches = []; cur = -1;
+  paintHighlights();
+  editor.focus();
+  if (m) editor.setSelectionRange(m.start, m.end); // 찾은 곳을 선택한 채로 본문으로
+}
+
+// keepNear: 지금 위치에서 가까운 것부터 (처음 열 때·글자 바꿀 때)
+function runFind(keepNear) {
+  const q = findQ.value;
+  matches = [];
+  if (q) {
+    const text = editor.value.toLowerCase();
+    const needle = q.toLowerCase();
+    let i = text.indexOf(needle);
+    while (i !== -1) { matches.push({ start: i, end: i + needle.length }); i = text.indexOf(needle, i + needle.length); }
+  }
+  if (!matches.length) cur = -1;
+  else if (keepNear || cur < 0) {
+    const from = editor.selectionStart || 0;
+    cur = Math.max(0, matches.findIndex((m) => m.end > from));
+  } else cur = Math.min(cur, matches.length - 1);
+  paintHighlights();
+  updateCount();
+  revealCurrent();
+}
+
+function step(dir) {
+  if (!matches.length) return;
+  cur = (cur + dir + matches.length) % matches.length;
+  paintHighlights();
+  updateCount();
+  revealCurrent();
+}
+
+function updateCount() {
+  const q = findQ.value;
+  findCount.classList.toggle('none', !!q && !matches.length);
+  findCount.textContent = !q ? '' : matches.length ? `${cur + 1}/${matches.length}` : '없음';
+  $('#find-prev').disabled = $('#find-next').disabled = matches.length < 2;
+}
+
+// textarea 뒤에 같은 글자를 투명하게 깔고 찾은 부분만 형광펜
+function paintHighlights() {
+  hl.textContent = '';
+  if (!matches.length) return;
+  const text = editor.value;
+  let pos = 0;
+  matches.forEach((m, i) => {
+    if (m.start > pos) hl.append(text.slice(pos, m.start));
+    const mk = document.createElement('mark');
+    if (i === cur) mk.className = 'cur';
+    mk.textContent = text.slice(m.start, m.end);
+    hl.appendChild(mk);
+    pos = m.end;
+  });
+  hl.append(text.slice(pos) + '\n');
+  syncHighlightBox();
+}
+
+// 스크롤바가 생기면 글자 폭이 줄어드니 같은 폭으로 맞추고, 스크롤도 같이
+function syncHighlightBox() {
+  const sb = editor.offsetWidth - editor.clientWidth;
+  hl.style.paddingRight = `${14 + sb}px`;
+  hl.scrollTop = editor.scrollTop;
+}
+
+// 지금 찾은 곳이 보이게 스크롤 (가운데쯤)
+function revealCurrent() {
+  const mk = hl.querySelector('mark.cur');
+  if (!mk) return;
+  const top = mk.offsetTop;
+  const view = editor.clientHeight;
+  if (top < editor.scrollTop + 8 || top + mk.offsetHeight > editor.scrollTop + view - 8) {
+    editor.scrollTop = Math.max(0, top - view / 2 + mk.offsetHeight / 2);
+  }
+  hl.scrollTop = editor.scrollTop;
+}
+
+editor.addEventListener('scroll', () => { hl.scrollTop = editor.scrollTop; });
+editor.addEventListener('input', () => { if (!findBar.hidden) runFind(false); });
+new ResizeObserver(() => { if (matches.length) syncHighlightBox(); }).observe(editor);
+
+findQ.addEventListener('input', () => runFind(true));
+findQ.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); step(e.shiftKey ? -1 : 1); }
+  if (e.key === 'Escape') { e.preventDefault(); closeFind(); }
+});
+$('#find-next').onclick = () => step(1);
+$('#find-prev').onclick = () => step(-1);
+$('#find-close').onclick = closeFind;
+
+document.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && key === 'f') { e.preventDefault(); openFind(); }
+  else if (e.key === 'F3') { e.preventDefault(); if (findBar.hidden) openFind(); else step(e.shiftKey ? -1 : 1); }
+  else if (e.key === 'Escape' && !findBar.hidden) { e.preventDefault(); closeFind(); }
+});

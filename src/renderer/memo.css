@@ -53,9 +53,10 @@ body {
 }
 .title::placeholder { color: var(--ink); opacity: .3; font-weight: 600; }
 
-main { flex: 1; display: flex; min-height: 0; }
+main { flex: 1; display: flex; min-height: 0; position: relative; }
 #editor {
   flex: 1;
+  position: relative; z-index: 1;
   border: 0; outline: 0; resize: none;
   padding: 6px 14px 12px;
   background: transparent;
@@ -65,6 +66,50 @@ main { flex: 1; display: flex; min-height: 0; }
 #editor::placeholder { color: var(--ink); opacity: .35; }
 #editor::-webkit-scrollbar { width: 8px; }
 #editor::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .15); border-radius: 4px; }
+
+/* 찾은 곳 표시: 글자는 투명, 같은 위치에 형광펜만 그려서 textarea 뒤에 깔기 */
+.hl {
+  position: absolute; inset: 0;
+  padding: 6px 14px 12px;
+  font: 15px/1.6 var(--font);
+  white-space: pre-wrap; overflow-wrap: break-word; word-break: normal;
+  color: transparent;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hl mark { color: transparent; background: rgba(255, 196, 0, .45); border-radius: 3px; }
+.hl mark.cur { background: rgba(255, 106, 61, .55); box-shadow: 0 0 0 1px rgba(255, 106, 61, .7); }
+
+/* 찾기 막대 */
+.find {
+  flex: none;
+  display: flex; align-items: center; gap: 2px;
+  margin: 6px 8px 0;
+  padding: 2px 4px 2px 8px;
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid rgba(0, 0, 0, .14);
+  border-radius: 9px;
+}
+.find:focus-within { border-color: #ff6a3d; }
+.find[hidden] { display: none; }
+.find-ico { flex: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; opacity: .5; margin-right: 4px; }
+#find-q {
+  flex: 1; min-width: 0;
+  border: 0; outline: 0; background: transparent;
+  padding: 5px 0;
+  color: #222; font: 13px var(--font);
+}
+.find-count { flex: none; font-size: 11.5px; color: #777; padding: 0 4px; font-variant-numeric: tabular-nums; }
+.find-count.none { color: #d9480f; }
+.find-btn {
+  flex: none; width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 5px;
+  background: transparent; color: #555;
+}
+.find-btn:hover { background: rgba(0, 0, 0, .07); color: #111; }
+.find-btn:disabled { opacity: .3; cursor: default; background: transparent; }
+.find-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 /* 하단 알림 표시 */
 footer { flex: none; padding: 0 8px 8px; }

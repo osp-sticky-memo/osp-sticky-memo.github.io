@@ -314,3 +314,8 @@ document.addEventListener('keydown', (e) => {
     btns[(i + 1) % 2].focus();
   }
 }, true);
+
+// Ctrl+F → 목록 검색창
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); qIn.focus(); qIn.select(); }
+});

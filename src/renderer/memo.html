@@ -34,7 +34,23 @@
   </header>
 
   <input id="title" class="title" type="text" maxlength="100" spellcheck="false" placeholder="제목 없음" autocomplete="off">
+  <!-- 찾기 (Ctrl+F) -->
+  <div class="find" id="find" hidden role="search">
+    <svg class="find-ico" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+    <input id="find-q" type="text" placeholder="메모에서 찾기" spellcheck="false" autocomplete="off" aria-label="메모에서 찾기">
+    <span class="find-count" id="find-count" aria-live="polite"></span>
+    <button class="find-btn" id="find-prev" title="이전 (Shift+Enter)" aria-label="이전">
+      <svg viewBox="0 0 16 16"><path d="M4 10l4-4 4 4"/></svg>
+    </button>
+    <button class="find-btn" id="find-next" title="다음 (Enter)" aria-label="다음">
+      <svg viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+    </button>
+    <button class="find-btn" id="find-close" title="닫기 (Esc)" aria-label="찾기 닫기">
+      <svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>
+    </button>
+  </div>
   <main>
+    <div class="hl" id="hl" aria-hidden="true"></div>
     <textarea id="editor" spellcheck="false" placeholder="메모를 입력하세요"></textarea>
   </main>
 
