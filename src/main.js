@@ -748,6 +748,14 @@ ipcMain.handle('settings:test', () => testNotification());
 
 ipcMain.handle('update:state', () => updater.getState());
 ipcMain.handle('app:open-site', () => shell.openExternal('https://ohsangplay.com/'));
+// 메모 속 링크 열기: 웹 주소만 기본 브라우저로 (파일·프로그램 실행 주소는 막음)
+ipcMain.handle('app:open-url', (_e, url) => {
+  try {
+    const u = new URL(String(url));
+    if (u.protocol === 'http:' || u.protocol === 'https:') return shell.openExternal(u.href);
+  } catch {}
+  return false;
+});
 ipcMain.handle('update:check', () => updater.check());
 ipcMain.handle('update:install', (e) => {
   const ok = updater.installNow();

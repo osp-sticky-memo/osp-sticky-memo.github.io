@@ -20,6 +20,7 @@ async function init() {
   if (!memo) return;
   editor.value = memo.content || '';
   titleIn.value = memo.title || '';
+  paintHighlights(); // 링크 밑줄
   render();
   updateTitle();
 
@@ -228,6 +229,7 @@ const findCount = $('#find-count');
 const hl = $('#hl');
 let matches = [];   // [{ start, end }]
 let cur = -1;
+let links = [];     // [{ start, end, url }]
 
 function openFind() {
   // 본문에서 고른 글자가 있으면 그걸로 찾기
@@ -283,21 +285,29 @@ function updateCount() {
   $('#find-prev').disabled = $('#find-next').disabled = matches.length < 2;
 }
 
-// textarea 뒤에 같은 글자를 투명하게 깔고 찾은 부분만 형광펜
+// textarea 뒤에 같은 글자를 투명하게 깔고, 링크 밑줄과 찾은 부분 형광펜만 그리기
 function paintHighlights() {
-  hl.textContent = '';
-  if (!matches.length) return;
   const text = editor.value;
-  let pos = 0;
-  matches.forEach((m, i) => {
-    if (m.start > pos) hl.append(text.slice(pos, m.start));
-    const mk = document.createElement('mark');
-    if (i === cur) mk.className = 'cur';
-    mk.textContent = text.slice(m.start, m.end);
-    hl.appendChild(mk);
-    pos = m.end;
-  });
-  hl.append(text.slice(pos) + '\n');
+  links = findLinks(text);
+  hl.textContent = '';
+  if (!matches.length && !links.length) return;
+  // 링크·찾은 곳의 시작/끝마다 잘라서 조각마다 표시
+  const cuts = new Set([0, text.length]);
+  for (const r of [...links, ...matches]) { cuts.add(r.start); cuts.add(r.end); }
+  const pts = [...cuts].sort((a, b) => a - b);
+  for (let k = 0; k < pts.length - 1; k++) {
+    const a = pts[k], b = pts[k + 1];
+    const piece = text.slice(a, b);
+    const li = links.findIndex((r) => r.start <= a && b <= r.end);
+    const mi = matches.findIndex((r) => r.start <= a && b <= r.end);
+    if (li < 0 && mi < 0) { hl.append(piece); continue; }
+    const el = document.createElement(mi >= 0 ? 'mark' : 'span');
+    if (mi === cur && mi >= 0) el.classList.add('cur');
+    if (li >= 0) { el.classList.add('lk'); el.dataset.l = li; }
+    el.textContent = piece;
+    hl.appendChild(el);
+  }
+  hl.append('\n');
   syncHighlightBox();
 }
 
@@ -339,3 +349,71 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'F3') { e.preventDefault(); if (findBar.hidden) openFind(); else step(e.shiftKey ? -1 : 1); }
   else if (e.key === 'Escape' && !findBar.hidden) { e.preventDefault(); closeFind(); }
 });
+
+// ---------- 링크 열기 ----------
+// http(s)://, www. 로 시작하는 주소. 한글이나 공백에서 끊고, 끝의 문장부호는 뺀다
+const URL_RE = /\b(?:https?:\/\/|www\.)[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+/gi;
+function findLinks(text) {
+  const out = [];
+  for (const m of text.matchAll(URL_RE)) {
+    let raw = m[0];
+    while (/[.,;:!?'")\]]$/.test(raw)) {
+      // 괄호는 주소 안에 여는 괄호가 있으면 살림 (위키 주소 등)
+      if (raw.endsWith(')') && (raw.match(/\(/g) || []).length >= (raw.match(/\)/g) || []).length) break;
+      raw = raw.slice(0, -1);
+    }
+    if (raw.length < 8) continue;
+    const url = /^www\./i.test(raw) ? `https://${raw}` : raw;
+    out.push({ start: m.index, end: m.index + raw.length, url });
+  }
+  return out;
+}
+
+// 마우스 위치에 있는 링크 (뒤에 깔린 밑줄 조각의 위치로 판단)
+function linkAt(x, y) {
+  for (const el of hl.querySelectorAll('.lk')) {
+    for (const r of el.getClientRects()) {
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return links[Number(el.dataset.l)];
+    }
+  }
+  return null;
+}
+
+function openLink(l) { if (l) window.api.openUrl(l.url); }
+
+let hover = null;
+function paintHover(ctrl) {
+  editor.classList.toggle('over-link', !!hover && ctrl);
+  editor.title = hover ? 'Ctrl+클릭하면 브라우저로 열기' : '';
+}
+editor.addEventListener('mousemove', (e) => { hover = linkAt(e.clientX, e.clientY); paintHover(e.ctrlKey || e.metaKey); });
+editor.addEventListener('mouseleave', () => { hover = null; paintHover(false); });
+window.addEventListener('keydown', (e) => { if (e.key === 'Control' || e.key === 'Meta') paintHover(true); });
+window.addEventListener('keyup', (e) => { if (e.key === 'Control' || e.key === 'Meta') paintHover(false); });
+editor.addEventListener('mousedown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.button !== 0) return;
+  const l = linkAt(e.clientX, e.clientY);
+  if (!l) return;
+  e.preventDefault();
+  openLink(l);
+});
+
+// 커서가 링크 안에 있으면 아래에 '링크 열기' 버튼
+const linkChip = $('#link-chip');
+const linkChipText = $('#link-chip-text');
+let chipLink = null;
+function updateLinkChip() {
+  const p = editor.selectionStart;
+  const focused = document.activeElement === editor;
+  chipLink = focused && editor.selectionStart === editor.selectionEnd
+    ? links.find((l) => p >= l.start && p <= l.end) || null
+    : null;
+  linkChip.hidden = !chipLink;
+  if (chipLink) linkChipText.textContent = chipLink.url.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+}
+['click', 'keyup', 'focus'].forEach((ev) => editor.addEventListener(ev, updateLinkChip));
+editor.addEventListener('input', () => { paintHighlights(); updateLinkChip(); });
+editor.addEventListener('blur', () => setTimeout(updateLinkChip, 150));
+linkChip.addEventListener('mousedown', (e) => e.preventDefault()); // 눌러도 본문 포커스 유지
+linkChip.addEventListener('click', () => openLink(chipLink));
+
