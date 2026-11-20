@@ -6,6 +6,7 @@
   <title>딩동메모 - 설정</title>
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="backup.css">
 </head>
 <body>
   <main>
@@ -80,6 +81,22 @@
     </section>
 
     <section>
+      <h2>백업</h2>
+      <p class="hint">메모를 파일로 저장해 두거나, 다른 PC의 딩동메모로 옮길 수 있어요.</p>
+      <div class="backup-row">
+        <button class="backup-btn" id="btn-export">
+          <svg viewBox="0 0 16 16"><path d="M8 10V2.5M4.8 5.7 8 2.5l3.2 3.2M3 11.5v1.5h10v-1.5"/></svg>
+          <span><b>내보내기</b><small>모든 메모를 파일로</small></span>
+        </button>
+        <button class="backup-btn" id="btn-import">
+          <svg viewBox="0 0 16 16"><path d="M8 2.5v7.5M4.8 7 8 10.2 11.2 7M3 11.5v1.5h10v-1.5"/></svg>
+          <span><b>가져오기</b><small>파일에서 메모 추가</small></span>
+        </button>
+      </div>
+      <p class="hint backup-tip">메모 하나만 보내려면 메모 목록에서 메모를 오른쪽 클릭 → <b>이 메모 내보내기</b>. 백업 파일을 메모 목록 창에 끌어다 놓아도 가져올 수 있어요.</p>
+    </section>
+
+    <section>
       <h2>일반</h2>
       <label class="toggle">
         <input type="checkbox" id="login">
@@ -89,6 +106,7 @@
 
     <p class="saved" id="saved" aria-live="polite"></p>
   </main>
+  <script src="backup-ui.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>

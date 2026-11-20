@@ -2,9 +2,11 @@
 // 역할: 메모 저장, 메모 창 관리, 트레이, 알림 스케줄러, 카톡식 알림 팝업
 
 const {
-  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, shell,
+  app, BrowserWindow, Tray, Menu, ipcMain, screen, powerMonitor, nativeImage, shell, dialog,
 } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const backup = require('./backup');
 const store = require('./store');
 const updater = require('./updater');
 
@@ -298,6 +300,7 @@ function showListContextMenu(id, sender) {
     { type: 'separator' },
     ...(isOpen ? [{ label: '메모 창 닫기', click: () => hideMemo(id) }] : []),
     // 삭제 확인은 목록 창 안의 딩동메모 스타일 확인 창으로
+    { label: '이 메모 내보내기…', click: async () => sender.send('backup:toast', await exportMemos([id], parent)) },
     { label: '삭제…', click: () => sender.send('list:confirm-delete', id) },
   ]);
   menu.popup({ window: parent });
@@ -685,6 +688,91 @@ ipcMain.handle('list:open', (_e, id) => { openMemoWindow(id); });
 ipcMain.handle('list:new', () => { createMemo(); });
 ipcMain.handle('list:context', (e, id) => showListContextMenu(id, e.sender));
 ipcMain.handle('list:delete', (_e, id) => deleteMemo(id));
+
+// ---------- 내보내기·가져오기 ----------
+const pendingImports = new Map(); // 미리보기를 보여준 가져오기 (token → 메모들)
+let importSeq = 0;
+
+function dateStamp() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// ids가 없으면 전체
+async function exportMemos(ids, parent) {
+  const memos = ids ? ids.map((i) => store.getMemo(i)).filter(Boolean) : store.getMemos();
+  if (!memos.length) return { ok: false, message: '내보낼 메모가 없어요.' };
+  const name = ids && memos.length === 1
+    ? `딩동메모-${backup.safeFileName(memoTitle(memos[0], '메모'))}.json`
+    : `딩동메모-백업-${dateStamp()}.json`;
+  const { canceled, filePath } = await dialog.showSaveDialog(parent, {
+    title: '메모 내보내기',
+    defaultPath: path.join(app.getPath('documents'), name),
+    filters: [{ name: '딩동메모 백업', extensions: ['json'] }],
+  });
+  if (canceled || !filePath) return { ok: false, canceled: true };
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(backup.buildExport(memos, app.getVersion()), null, 2), 'utf8');
+  } catch {
+    return { ok: false, message: '파일을 저장하지 못했어요. 다른 폴더를 골라 주세요.' };
+  }
+  return { ok: true, message: `메모 ${memos.length}개를 '${path.basename(filePath)}'로 내보냈어요.` };
+}
+
+function previewTitle(m) {
+  return m.title.trim() || m.content.split('\n').map((x) => x.trim()).find(Boolean) || '빈 메모';
+}
+
+// 파일을 읽어서 미리보기 정보로 (실제 추가는 backup:import에서)
+function readBackupFile(filePath) {
+  try {
+    const st = fs.statSync(filePath);
+    if (!st.isFile()) return { ok: false, message: '파일을 읽지 못했어요.' };
+    if (st.size > 20 * 1024 * 1024) return { ok: false, message: '파일이 너무 커요. (20MB까지)' };
+    const parsed = backup.parseBackup(fs.readFileSync(filePath, 'utf8'), st.size);
+    if (!parsed.memos.length) return { ok: false, message: '이 파일에는 가져올 메모가 없어요.' };
+    const { fresh, dup } = backup.splitDuplicates(parsed.memos, store.getMemos());
+    const token = String(++importSeq);
+    pendingImports.clear();
+    pendingImports.set(token, { fresh, dup });
+    const shown = fresh.length ? fresh : dup;
+    return {
+      ok: true,
+      token,
+      file: path.basename(filePath),
+      exportedAt: parsed.exportedAt,
+      fresh: fresh.length,
+      dup: dup.length,
+      preview: shown.slice(0, 4).map((m) => ({ title: previewTitle(m), color: m.color })),
+    };
+  } catch (err) {
+    if (err instanceof backup.BackupError) return { ok: false, message: err.message };
+    return { ok: false, message: '파일을 읽지 못했어요.' };
+  }
+}
+
+ipcMain.handle('backup:export', (e, ids) => exportMemos(Array.isArray(ids) ? ids : null, BrowserWindow.fromWebContents(e.sender)));
+ipcMain.handle('backup:pick', async (e) => {
+  const { canceled, filePaths } = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), {
+    title: '메모 가져오기',
+    defaultPath: app.getPath('documents'),
+    properties: ['openFile'],
+    filters: [{ name: '딩동메모 백업', extensions: ['json'] }],
+  });
+  if (canceled || !filePaths?.[0]) return { ok: false, canceled: true };
+  return readBackupFile(filePaths[0]);
+});
+ipcMain.handle('backup:read', (_e, filePath) => (typeof filePath === 'string' && filePath ? readBackupFile(filePath) : { ok: false, message: '파일을 읽지 못했어요.' }));
+ipcMain.handle('backup:import', (_e, token, includeDup) => {
+  const p = pendingImports.get(String(token));
+  if (!p) return { ok: false, message: '다시 시도해 주세요.' };
+  pendingImports.delete(String(token));
+  const list = includeDup ? [...p.fresh, ...p.dup] : p.fresh;
+  const added = store.importMemos(list);
+  refreshTrayMenu();
+  return { ok: true, added, message: added ? `메모 ${added}개를 가져왔어요. 메모 목록에서 볼 수 있어요.` : '새로 가져온 메모가 없어요.' };
+});
+ipcMain.handle('backup:cancel', () => { pendingImports.clear(); });
 ipcMain.handle('list:toggle-pinned', (_e, id) => {
   const m = store.getMemo(id);
   if (m) store.updateMemo(id, { pinned: !m.pinned });

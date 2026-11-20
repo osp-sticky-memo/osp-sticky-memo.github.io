@@ -319,3 +319,6 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); qIn.focus(); qIn.select(); }
 });
+
+// 백업 파일을 목록 창에 끌어다 놓으면 가져오기
+window.BackupUI.enableDrop();

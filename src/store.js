@@ -113,6 +113,29 @@ function addMemo(init = {}) {
   return memo;
 }
 
+// 백업 파일에서 가져온 메모 추가 (창은 열지 않고 목록에만)
+function importMemos(list) {
+  for (const m of list) {
+    data.memos.push({
+      id: crypto.randomUUID(),
+      title: m.title,
+      content: m.content,
+      color: m.color,
+      x: undefined, y: undefined, width: undefined, height: undefined,
+      visible: false,
+      alwaysOnTop: false,
+      pinned: !!m.pinned,
+      mini: null,
+      alarm: m.alarm,
+      snoozeAt: null,
+      createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
+    });
+  }
+  scheduleSave();
+  return list.length;
+}
+
 function updateMemo(id, patch) {
   const memo = getMemo(id);
   if (!memo) return null;
@@ -128,4 +151,4 @@ function removeMemo(id) {
   scheduleSave();
 }
 
-module.exports = { load, flush, onChange, getSettings, updateSettings, getMemos, getMemo, addMemo, updateMemo, removeMemo, COLORS };
+module.exports = { load, flush, onChange, getSettings, updateSettings, getMemos, getMemo, addMemo, importMemos, updateMemo, removeMemo, COLORS };

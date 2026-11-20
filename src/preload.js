@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   // 메모 창
@@ -48,6 +48,14 @@ contextBridge.exposeInMainWorld('api', {
   getUpdateState: () => ipcRenderer.invoke('update:state'),
   openSite: () => ipcRenderer.invoke('app:open-site'),
   openUrl: (url) => ipcRenderer.invoke('app:open-url', url),
+
+  // 내보내기·가져오기
+  exportMemos: (ids) => ipcRenderer.invoke('backup:export', ids || null),
+  pickBackup: () => ipcRenderer.invoke('backup:pick'),
+  readBackup: (file) => ipcRenderer.invoke('backup:read', webUtils.getPathForFile(file)),
+  importBackup: (token, includeDup) => ipcRenderer.invoke('backup:import', token, !!includeDup),
+  cancelBackup: () => ipcRenderer.invoke('backup:cancel'),
+  onBackupToast: (cb) => ipcRenderer.on('backup:toast', (_e, r) => cb(r)),
   checkUpdate: () => ipcRenderer.invoke('update:check'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),

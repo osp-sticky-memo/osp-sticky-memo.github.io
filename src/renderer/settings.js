@@ -107,3 +107,8 @@ $('#seconds').addEventListener('change', (e) => save({ notifySeconds: Number(e.t
 
 $('#login').addEventListener('change', (e) => save({ openAtLogin: e.target.checked }));
 $('#btn-test').onclick = () => window.api.testNotify();
+
+// ---------- 백업 ----------
+$('#btn-export').onclick = () => window.BackupUI.exportAll();
+$('#btn-import').onclick = () => window.BackupUI.pickImport();
+window.BackupUI.enableDrop();
